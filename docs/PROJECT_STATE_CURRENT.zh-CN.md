@@ -14,15 +14,16 @@
 
 ## 3. 当前阶段
 
-阶段 0B：数据准备契约、决策记录与当前状态基线
+阶段 0C：原始坐标空间 grid probe 与播放器 XML 消费契约静态审查
 
-本阶段目标是把研究者已确认的数据准备原则、当前事实、待确认问题和项目进展写入版本化中文文档。本阶段不进入 grid probe，不实现切块，不生成 PLY、DRC、BIN、XML、manifest 或 Stage2Input，不运行任何外部脚本。
+阶段 0C 已完成。本阶段只完成了 raw-coordinate grid probe 与播放器 XML 静态消费审查；未实现正式切块，不生成正式 PLY、DRC、BIN、XML、manifest、asset catalog 或 Stage2Input，也未运行旧播放器、导师脚本或 Draco 工具。
 
 ## 4. 已完成工作
 
 - 阶段 0A：原始 Longdress、旧处理结果、导师脚本包与旧 XML 的只读审查。
 - 阶段 0A.1：研究者补录旧 DASH 风格资产组织、A1/A2 ASCII 路径弃用、binary PLY 优先等历史说明。
-- 阶段 0B：当前正在建立契约、决策日志和状态文档。
+- 阶段 0B：已建立数据准备契约、决策日志和状态文档。
+- 阶段 0C：已完成 frame 1051 为 pilot 的受控 raw-coordinate grid probe，并静态审查旧播放器对 DASH 风格自定义 XML 的消费路径。
 
 ## 5. 当前已确认决策
 
@@ -55,12 +56,15 @@
 - 旧目录包含 `A1_ply`、`A2_drc`、`A3_ply_binary`、`A4_bin_binary`、`A5_drc_binary` 等历史资产层级。
 - 旧 `video_1.xml` 路径：`E:\Miunaaaa\0-work\code\vv\pythonProject\static\xml\video_1.xml`。
 - 旧 XML 是 DASH 风格自定义播放器资源清单参考；它不是已验证的严格标准 MPEG-DASH MPD，也不是新项目强制模板。
+- 阶段 0C 对 frames `1051, 1125, 1200, 1275, 1350` 完成 raw-coordinate bbox probe；5 帧 bbox 并集 provisional envelope 为 min `(27, 3, 22)`、max `(459, 1012, 570)`。
+- 阶段 0C 对 frame 1051 的候选 profile 进行 occupancy probe：G54 有 25 个非空 tile，最大 tile point share 为 `0.121253`；G128 有 46 个非空 tile，最大 tile point share 为 `0.049999`。G54/G128 均只是候选 probe profile，最终 grid 尚未冻结。
+- 阶段 0C 静态审查显示，旧后端 `app.py` 的 `/mpd/<video_id>` 只负责返回 `static/xml/<video_id>.xml`；`/gof_v10` 主要消费 JSON 字段 `video_id`、`gof_id`、`as_id`、`rep_id` 并按目录规则读取 A3/A4/A5 资产，未在后端直接解析 XML tag/attribute。
 - 导师脚本包路径：`E:\Miunaaaa\0-work\code\MENTOR_SCRIPT_PACKAGE_vv_preprocess`。该脚本包仅作为静态参考资产。
 
 ## 8. 不可越过的边界
 
-- 不读取、复制、切块或转换原始 PLY。
-- 不生成 binary PLY、DRC、BIN、XML、JSON manifest 或 Stage2Input。
+- 不复制、切块、转换或保存正式点云资产。
+- 不生成 binary PLY、DRC、BIN、XML、JSON manifest、asset catalog 或 Stage2Input。
 - 不运行导师脚本、旧播放器、Draco encoder 或 decoder。
 - 不冻结具体 `Nx × Ny × Nz`。
 - 不冻结 Draco 参数。
@@ -71,9 +75,9 @@
 
 ## 9. 下一阶段建议
 
-在不生成正式资产的前提下，先进行单帧 frame 1051 的 grid probe 与播放器 XML 消费契约静态审查。
+在不生成正式资产的前提下，研究者应先根据阶段 0C probe 结果选择、调整或补充候选 grid 方案，并决定新播放器 XML 的实际消费契约边界。
 
-下一阶段应优先回答：候选固定空间网格如何只读评估、旧播放器 XML 到底消费哪些字段、空 tile 在播放器资源层如何表达、哪些元数据属于 asset catalog 而不是 Stage2Input。
+下一阶段应优先回答：是否以 G128 继续推进、是否需要更多帧的只读 bbox/occupancy probe、旧播放器兼容层是否需要直接消费 `SegmentTemplate` 或继续由后端 API 目录规则驱动、空 tile 在播放器资源层如何表达、哪些元数据属于 asset catalog 而不是 Stage2Input。
 
 下一阶段仍不应直接批量切块、批量生成多质量 PLY、批量 Draco 编码或完整 XML 生成。
 

@@ -1,10 +1,12 @@
 # Stage2 数据准备项目契约
 
+> 阶段 0C 更新：本阶段允许受控、只读的原始 PLY 几何扫描和 provisional grid probe；但仍禁止生成、复制、转换或保存正式点云资产，仍禁止正式切块、多质量版本生成、Draco 编码、XML 生成、asset catalog 生成和 Stage2Input 生成。
+
 ## 1. 项目目的与范围
 
 本仓库服务于 Work1 Stage2 的真实数据准备与资产元数据工作。Stage2 的目标是在 Stage1 给定 `Budget_total` 后，为每个空间 tile 选择离散质量档位；本仓库未来负责提供可追溯的 tile 级多质量候选资产、资产元数据和后续 pilot 所需证据。
 
-当前阶段仍是文档与决策基线阶段，不进入 grid probe、切块、压缩、manifest 生成或 Stage2Input 生成。
+阶段 0C 允许受控、只读的原始 PLY 几何扫描和 provisional grid probe；但仍禁止生成、复制、转换或保存正式点云资产，仍禁止正式切块、多质量版本生成、Draco 编码、XML 生成、asset catalog 生成和 Stage2Input 生成。
 
 ## 2. 当前已确认的数据准备方向
 
@@ -127,10 +129,10 @@ Stage2Input JSON
 
 当前阶段不做以下工作：
 
-- 不读取、复制、切块或转换原始 PLY。
-- 不生成 binary PLY、DRC、BIN、XML、JSON manifest 或 Stage2Input。
+- 不复制、切块、转换或保存正式点云资产。
+- 不生成 binary PLY、DRC、BIN、XML、JSON manifest、asset catalog 或 Stage2Input。
 - 不运行导师脚本、旧播放器、Draco encoder 或 decoder。
-- 不设计或实现最终 grid probe。
+- 不设计、实现或冻结最终 grid；阶段 0C 的 grid probe 仅限受控、只读、provisional 证据收集。
 - 不冻结具体 `Nx × Ny × Nz`。
 - 不冻结 Draco 参数。
 - 不冻结 XML tag/schema。
@@ -147,7 +149,7 @@ Stage2Input JSON
 5. asset catalog、player manifest XML 与 Stage2Input 的具体字段和互相关联方式。
 6. 空 tile 是否进入 Stage2Input 或播放器 XML。
 7. `r_bytes`、`d_ms` 与相机相关字段的正式口径。
-8. 下一阶段 grid probe 的只读/实验边界与输出形式。
+8. 基于阶段 0C grid probe 结果的候选 grid 取舍、补充 probe 范围与冻结流程。
 
 ## 10. 文档维护规则
 
