@@ -1,0 +1,12 @@
+data/
+artifacts/
+outputs/
+tmp/
+.cache/
+
+*.ply
+*.drc
+*.zip
+*.7z
+*.tar
+*.gz
