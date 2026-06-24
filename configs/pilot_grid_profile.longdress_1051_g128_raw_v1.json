@@ -1,0 +1,32 @@
+{
+  "profile_id": "longdress_raw_g128_fullseq_pilot_v1",
+  "dataset_id": "8i_longdress",
+  "source_frame_id": 1051,
+  "coordinate_basis": "raw_coordinate",
+  "grid_origin": [0.0, 0.0, 0.0],
+  "grid_max": [481.0, 1023.0, 660.0],
+  "grid_extent": [481.0, 1023.0, 660.0],
+  "grid_dimensions": {
+    "nx": 4,
+    "ny": 8,
+    "nz": 4
+  },
+  "theoretical_cell_count": 128,
+  "cell_size": [120.25, 127.875, 165.0],
+  "tile_id_format": "gx_<ix>_gy_<iy>_gz_<iz>",
+  "tile_index_base": 0,
+  "boundary_rule": "Each axis uses a half-open [min, max) interval.",
+  "max_boundary_assignment_rule": "A coordinate exactly equal to the grid maximum on an axis is assigned to the last cell on that axis.",
+  "pdl_baseline": 1.0,
+  "profile_scope": {
+    "confirmed_for": "frame 1051 pilot PDL=1.0 binary PLY asset generation",
+    "not_equivalent_to": "official world coordinates, metric coordinates, or final full-sequence experimental grid"
+  },
+  "provenance": {
+    "grid_origin": "derived from full-sequence raw-coordinate envelope scan",
+    "grid_max": "derived from full-sequence raw-coordinate envelope scan",
+    "grid_extent": "derived from full-sequence raw-coordinate envelope scan",
+    "cell_size": "derived from full-sequence raw-coordinate envelope scan and G128 dimensions",
+    "coordinate_limit": "raw-coordinate values are not interpreted as official physical coordinates or meters"
+  }
+}

@@ -1,24 +1,25 @@
 # Stage2 数据准备项目契约
 
-> 阶段 0D 更新：本阶段允许对完整 Longdress 序列进行受控、只读的 raw-coordinate envelope 与 occupancy 扫描，用于验证 provisional G128 profile；仍禁止正式切块、点云格式转换、质量版本生成、Draco 编码、XML 生成、asset catalog 生成和 Stage2Input 生成。
+> 阶段 1A 更新：本阶段允许对已冻结的 frame 1051 pilot profile 执行受控空间分块，并生成 `PDL = 1.0` 的 binary little-endian tile PLY 及 frame-level metadata；仍禁止其他 PDL 质量版本生成、Draco 编码、XML 生成、BIN 打包、Stage2Input 生成和批量帧资产生成。
 
 ## 1. 项目目的与范围
 
 本仓库服务于 Work1 Stage2 的真实数据准备与资产元数据工作。Stage2 的目标是在 Stage1 给定 `Budget_total` 后，为每个空间 tile 选择离散质量档位；本仓库未来负责提供可追溯的 tile 级多质量候选资产、资产元数据和后续 pilot 所需证据。
 
-阶段 0D 允许对完整 Longdress 序列进行受控、只读的 raw-coordinate envelope 与 occupancy 扫描，用于验证 provisional G128 profile；仍禁止正式切块、点云格式转换、质量版本生成、Draco 编码、XML 生成、asset catalog 生成和 Stage2Input 生成。
+阶段 1A 允许对已冻结的 frame 1051 pilot profile 执行受控空间分块，并生成 `PDL = 1.0` 的 binary little-endian tile PLY 及 frame-level metadata。阶段 1A 仍禁止其他 PDL 质量版本生成、Draco 编码、XML 生成、BIN 打包、Stage2Input 生成和批量帧资产生成。
 
 ## 2. 当前已确认的数据准备方向
 
 ### 已确认
 
 - 第一轮真实资产 pilot 源帧为 8i Longdress 的 `longdress_vox10_1051.ply`，`frame_id = 1051`。该决定只冻结第一轮 pilot 的源帧。
-- `G128 = 4 x 8 x 4` 已确认为 frame 1051 单帧 pilot 的 provisional grid profile；该决定不等于全序列正式最终 grid 已冻结。
+- `longdress_raw_g128_fullseq_pilot_v1` 已冻结为 frame 1051 pilot 的 fixed raw-coordinate grid profile；该决定不等于全序列正式最终 grid 已冻结。
 - 新数据准备项目保留五个点密度质量档位：`PDL = {0.2, 0.4, 0.6, 0.8, 1.0}`。
 - `PDL = 1.0` 表示该 tile 的完整原始点集，不进行降采样。
 - 后续新管线的中间点云资产只使用 `binary little-endian PLY`。
 - DRC 必须由对应质量档位的 binary PLY 生成。
 - 理论 grid universe 中某帧为空的 tile 不生成实际 binary PLY 文件，也不生成实际 DRC 文件。
+- 阶段 1A 只生成 frame 1051 非空 tile 的 `PDL = 1.0` binary little-endian PLY baseline。
 
 ### 当前方向但未冻结细节
 
@@ -130,11 +131,11 @@ Stage2Input JSON
 
 当前阶段不做以下工作：
 
-- 不复制、切块、转换或保存正式点云资产。
-- 不生成 binary PLY、DRC、BIN、XML、JSON manifest、asset catalog 或 Stage2Input。
+- 不生成 `PDL = 0.2 / 0.4 / 0.6 / 0.8` 质量版本。
+- 不生成 DRC、BIN、XML、player manifest、正式 asset catalog 或 Stage2Input。
+- 不生成其他 frame 或全序列资产。
 - 不运行导师脚本、旧播放器、Draco encoder 或 decoder。
-- 不设计、实现或冻结最终 grid；阶段 0D 的全序列 envelope 与 occupancy 扫描仅限受控、只读、provisional 证据收集。
-- 不冻结具体 `Nx × Ny × Nz`。
+- 不把 frame 1051 pilot profile 写成官方世界坐标、物理米制网格、最优 grid 或最终全序列实验 grid。
 - 不冻结 Draco 参数。
 - 不冻结 XML tag/schema。
 - 不修改 `pcv-stage2-allocation` 或 `pcv-distance-quality-calibration`。
@@ -150,7 +151,7 @@ Stage2Input JSON
 5. asset catalog、player manifest XML 与 Stage2Input 的具体字段和互相关联方式。
 6. 空 tile 是否进入 Stage2Input 或播放器 XML。
 7. `r_bytes`、`d_ms` 与相机相关字段的正式口径。
-8. 基于阶段 0D 全序列 envelope 与 G128 occupancy 结果的正式 pilot grid profile 审阅、调整与冻结流程。
+8. 是否将阶段 1A 的 frame 1051 pilot profile 推广到后续少量帧验证或全序列实验资产。
 
 ## 10. 文档维护规则
 

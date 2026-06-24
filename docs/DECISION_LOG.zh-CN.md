@@ -11,6 +11,8 @@
 | D0B-7 | old asset and mentor script reuse boundary | RESOLVED_USER_CONFIRMED | 旧资产和导师脚本仅作静态参考，不整体复用、不直接运行。 |
 | D0B-8 | project state document maintenance rule | RESOLVED_USER_CONFIRMED | 后续每阶段结束必须更新项目状态文档，决策变化同步更新决策日志。 |
 | D0D-1 | G128 single-frame pilot provisional grid profile | RESOLVED_USER_CONFIRMED | `G128 = 4 x 8 x 4` 仅作为 Longdress frame 1051 单帧 pilot 的 provisional grid profile。 |
+| D1A-1 | frame 1051 pilot fixed raw-coordinate grid profile | RESOLVED_USER_CONFIRMED | `longdress_raw_g128_fullseq_pilot_v1` 已冻结为 frame 1051 pilot 的真实资产生成 profile。 |
+| D1A-2 | frame 1051 PDL=1.0 binary PLY baseline asset scope | RESOLVED_USER_CONFIRMED | 阶段 1A 只生成 frame 1051 非空 tile 的 `PDL = 1.0` binary PLY baseline。 |
 
 ## D0B-1 pilot source frame
 
@@ -110,3 +112,25 @@
 - 未确认边界：全序列正式 envelope、正式 grid origin、正式 cell_size、正式 `tile_id`、正式边界规则、是否适用于全序列正式资产生成均未冻结。
 - 对后续实现的影响：可以围绕 G128 做全序列 raw-coordinate occupancy 验证和单帧 pilot 准备；在研究者审阅并确认前，不能将 G128 写成正式最终 grid，也不能启动正式切块或批量资产生成。
 - 对论文或实验表述的影响：可以表述为 pilot 阶段的 provisional grid profile 已由研究者确认；不能表述为最终实验网格参数或全序列正式资产网格已确定。
+
+## D1A-1 frame 1051 pilot fixed raw-coordinate grid profile
+
+- 决策编号：D1A-1
+- 主题：frame 1051 pilot fixed raw-coordinate grid profile
+- 状态：RESOLVED_USER_CONFIRMED
+- 背景：阶段 0D 已完成 Longdress 1051-1350 全 300 帧 raw-coordinate envelope 扫描，完整 envelope 为 `(0, 0, 0)` 到 `(481, 1023, 660)`。研究者随后确认阶段 1A 使用该 envelope 派生的 G128 profile 生成 frame 1051 pilot baseline。
+- 已确认内容：`profile_id = longdress_raw_g128_fullseq_pilot_v1`，`grid_origin = (0, 0, 0)`，`grid_max = (481, 1023, 660)`，`grid_dimensions = 4 x 8 x 4`，`cell_size = (120.25, 127.875, 165)`，`tile_id_format = gx_<ix>_gy_<iy>_gz_<iz>`，边界规则为每轴 `[min, max)` 且坐标恰好等于全局 max 时归入最后一个 cell。
+- 未确认边界：该决定只冻结 frame 1051 pilot 的 grid profile；不自动等于全序列最终 grid、官方世界坐标、物理米制网格或最优实验网格。低 PDL 采样、Draco profile、XML schema、Stage2Input 字段仍未冻结。
+- 对后续实现的影响：阶段 1A 可以据此对 frame 1051 执行受控空间分块并生成 `PDL = 1.0` binary PLY baseline；不得据此启动批量帧资产或低 PDL / DRC / XML 生成。
+- 对论文或实验表述的影响：可以表述为 frame 1051 pilot baseline 的固定 raw-coordinate grid profile；不能表述为最终全序列实验 grid 已确定。
+
+## D1A-2 frame 1051 PDL=1.0 binary PLY baseline asset scope
+
+- 决策编号：D1A-2
+- 主题：frame 1051 `PDL = 1.0` binary PLY baseline asset scope
+- 状态：RESOLVED_USER_CONFIRMED
+- 背景：`PDL = 1.0` 已由 D0B-3 确认为完整原始点集；阶段 1A 是首次真实单帧 pilot 资产生成，需保持范围足够窄并可验证。
+- 已确认内容：阶段 1A 只生成 `longdress_vox10_1051.ply` 中非空 tile 的 `PDL = 1.0` binary little-endian PLY，记录 frame-level metadata，并运行独立验证脚本。空 tile 不生成实际 PLY 文件，只在 metadata 中记录。
+- 未确认边界：`PDL = 0.2 / 0.4 / 0.6 / 0.8`、降采样算法、Draco DRC、BIN、XML、player manifest、正式 asset catalog、Stage2Input 和批量帧资产均不在阶段 1A 范围内。
+- 对后续实现的影响：后续应先审阅 frame 1051 baseline 的分块统计与加载可行性，再冻结低 PDL 采样规则并生成多质量 binary PLY。
+- 对论文或实验表述的影响：可表述为单帧 pilot 的 level-1 baseline 已生成并验证；不能表述为完整多质量资产集、完整压缩资产集或最终 Stage2 数据集已完成。
