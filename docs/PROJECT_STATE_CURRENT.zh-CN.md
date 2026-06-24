@@ -16,11 +16,11 @@
 
 ## 3. 当前阶段
 
-阶段 1A：frame 1051 G128 的 binary PLY 基线资产生成与分块完整性验证
+阶段 1B：低 PDL 采样语义追溯、tile-local 适配分析与质量层级契约准备
 
-阶段 1A 已完成。本阶段基于已冻结的 frame 1051 fixed raw-coordinate grid profile，生成了 frame 1051 非空 tile 的 `PDL = 1.0` binary little-endian PLY baseline，并完成独立验证。
+阶段 1A 已完成并验证 frame 1051 的 `PDL = 1.0` binary PLY baseline。
 
-本轮未生成 `PDL = 0.2 / 0.4 / 0.6 / 0.8`、Draco DRC、BIN、XML、player manifest、正式 asset catalog、Stage2Input 或批量帧资产；未运行旧播放器、导师脚本或 Draco 工具。
+阶段 1B 已完成低 PDL 采样语义追溯与 tile-local 适配分析，但尚未生成 `PDL = 0.2 / 0.4 / 0.6 / 0.8` 资产。本轮未生成 Draco DRC、BIN、XML、player manifest、正式 asset catalog、Stage2Input 或批量帧资产；未运行旧播放器、导师脚本、Draco 工具或 calibration 正式实验。
 
 ## 4. 已完成工作
 
@@ -30,6 +30,7 @@
 - 阶段 0C：已完成 frame 1051 为 pilot 的受控 raw-coordinate grid probe，并静态审查旧播放器对 DASH 风格自定义 XML 的消费路径。
 - 阶段 0D：已完成 Longdress 全序列 raw-coordinate envelope 扫描，并在完整 envelope 下验证 G128 全序列 occupancy。
 - 阶段 1A：已完成 frame 1051 fixed-grid `PDL = 1.0` binary PLY baseline 生成与独立验证。
+- 阶段 1B：已完成低 PDL 采样语义追溯、旧质量资产有限检查和 tile-local / frame-global 适配分析。
 
 ## 5. 当前已确认决策
 
@@ -41,6 +42,7 @@
 - 上述 profile 只冻结 frame 1051 pilot 真实资产生成规则，不等于全序列最终实验 grid、官方世界坐标或物理米制网格。
 - 新项目保留五个 PDL 档位：`{0.2, 0.4, 0.6, 0.8, 1.0}`，其中 `PDL = 1.0` 为完整原始点集。
 - 阶段 1A 只生成 frame 1051 非空 tile 的 `PDL = 1.0` binary little-endian PLY baseline。
+- calibration 正式低质量渲染使用 seeded nested prefix sampling；这是 full-cloud rendering evidence，不是 tile-level isolated calibration。
 - 新中间点云资产只使用 binary little-endian PLY。
 - DRC 必须由对应质量档位的 binary PLY 生成。
 - 空 tile 不生成实际 binary PLY 或 DRC，但必须在元数据中记录空 tile 状态。
@@ -51,7 +53,7 @@
 
 - 是否将 `longdress_raw_g128_fullseq_pilot_v1` 推广为后续少量帧或全序列实验 grid。
 - 工作性 vertical axis 与 Longdress 坐标尺度解释。
-- 低 PDL 采样算法、是否嵌套降采样、随机种子、确定性排序和点数取整规则。
+- 低 PDL 最终采样作用域、嵌套策略、随机性或稳定排序策略、seed 派生规则和目标点数取整规则。
 - Draco encoder 版本、调用方式、几何量化、颜色量化、compression level、误差容忍和解码验证规则。
 - 空 tile 是否进入 Stage2Input 或播放器 XML，以及路径字段表达方式。
 - asset catalog / asset metadata、player manifest XML 与 Stage2Input JSON 的具体字段和关联规则。
@@ -75,11 +77,13 @@
 - 阶段 1A 使用 `configs/pilot_grid_profile.longdress_1051_g128_raw_v1.json` 生成 frame 1051 `PDL = 1.0` binary PLY baseline。
 - 阶段 1A 生成资产本地目录：`artifacts/pilot_1051_g128_raw_v1/`。
 - 阶段 1A source vertex count 为 `765821`；生成 binary PLY 文件数为 `40`；独立验证确认点数守恒、空 tile 无 PLY、所有输出 PLY 为 `binary_little_endian 1.0`，并确认 source / output canonical record digest 一致。
+- 阶段 1B 追溯 `pcv-distance-quality-calibration`：正式 run 使用 `buildNestedQualityGeometry` 对完整 PLY geometry 做 seeded permutation prefix sampling；低质量点数规则为 `Math.max(1, Math.floor(sourcePointCount * qualityLevel))`。
+- 阶段 1B 对旧 `GOF_1/A3_ply_binary/frame_0/cell_0` 质量组做有限只读检查：`R2_0.8` 是 `R1` 子集，但 `R3_0.6` 不是 `R2_0.8` 子集，`R4_0.4` 不是 `R3_0.6` 子集；旧质量资产不能用来冻结新 pipeline 的嵌套 PDL 语义。
 - 导师脚本包路径：`E:\Miunaaaa\0-work\code\MENTOR_SCRIPT_PACKAGE_vv_preprocess`。该脚本包仅作为静态参考资产。
 
 ## 8. 不可越过的边界
 
-- 不生成低 PDL 质量版本，直到研究者冻结采样规则。
+- 不生成低 PDL 质量版本，直到研究者冻结采样作用域、嵌套、seed 与取整规则。
 - 不生成 DRC、BIN、XML、player manifest、正式 asset catalog 或 Stage2Input。
 - 不生成其他 frame 或全序列资产，直到研究者确认下一阶段范围。
 - 不运行导师脚本、旧播放器、Draco encoder 或 decoder。
@@ -92,11 +96,11 @@
 
 ## 9. 下一阶段建议
 
-先审阅 frame 1051 binary PLY baseline 的分块统计与可视化/加载可行性，再冻结 PDL 采样规则并生成多质量 binary PLY。
+下一阶段应在研究者确认采样契约后，仅对 frame 1051 的非空 tile 生成多质量 binary PLY，并独立验证 nested property、点数比例和属性保真。
 
-下一阶段应优先回答：是否接受 frame 1051 `PDL = 1.0` baseline 的 40 个非空 tile / 88 个空 tile 结果，是否需要对生成的 binary PLY 做播放器或可视化加载检查，低 PDL 是否采用嵌套降采样、固定随机种子和确定性排序，以及多质量 metadata 中如何记录目标 PDL、实际保留点数比例和 provenance。
+当前必须由研究者确认：低 PDL 最终采样作用域、嵌套策略、随机性或稳定排序策略、目标点数取整规则，以及小 tile 的保底与 actual ratio 记录方式。
 
-下一阶段不应直接批量生成全序列资产、直接生成 DRC、直接生成 XML 或直接生成 Stage2Input。
+下一阶段仍不应直接批量生成全序列资产、直接生成 DRC、直接生成 XML 或直接生成 Stage2Input。
 
 ## 10. 文档与仓库维护规则
 

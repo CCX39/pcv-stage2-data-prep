@@ -1,12 +1,12 @@
 # Stage2 数据准备项目契约
 
-> 阶段 1A 更新：本阶段允许对已冻结的 frame 1051 pilot profile 执行受控空间分块，并生成 `PDL = 1.0` 的 binary little-endian tile PLY 及 frame-level metadata；仍禁止其他 PDL 质量版本生成、Draco 编码、XML 生成、BIN 打包、Stage2Input 生成和批量帧资产生成。
+> 阶段 1B 更新：本阶段允许对既有 calibration 项目、旧质量资产与导师参考脚本进行只读采样语义追溯和 tile-local 适配分析；仍禁止生成新的低 PDL PLY、DRC、BIN、XML、asset catalog、Stage2Input 或批量帧资产。
 
 ## 1. 项目目的与范围
 
 本仓库服务于 Work1 Stage2 的真实数据准备与资产元数据工作。Stage2 的目标是在 Stage1 给定 `Budget_total` 后，为每个空间 tile 选择离散质量档位；本仓库未来负责提供可追溯的 tile 级多质量候选资产、资产元数据和后续 pilot 所需证据。
 
-阶段 1A 允许对已冻结的 frame 1051 pilot profile 执行受控空间分块，并生成 `PDL = 1.0` 的 binary little-endian tile PLY 及 frame-level metadata。阶段 1A 仍禁止其他 PDL 质量版本生成、Draco 编码、XML 生成、BIN 打包、Stage2Input 生成和批量帧资产生成。
+阶段 1B 允许对既有 calibration 项目、旧质量资产与导师参考脚本进行只读采样语义追溯和 tile-local 适配分析；仍禁止生成新的低 PDL PLY、DRC、BIN、XML、asset catalog、Stage2Input 或批量帧资产。
 
 ## 2. 当前已确认的数据准备方向
 

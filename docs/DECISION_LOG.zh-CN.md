@@ -13,6 +13,7 @@
 | D0D-1 | G128 single-frame pilot provisional grid profile | RESOLVED_USER_CONFIRMED | `G128 = 4 x 8 x 4` 仅作为 Longdress frame 1051 单帧 pilot 的 provisional grid profile。 |
 | D1A-1 | frame 1051 pilot fixed raw-coordinate grid profile | RESOLVED_USER_CONFIRMED | `longdress_raw_g128_fullseq_pilot_v1` 已冻结为 frame 1051 pilot 的真实资产生成 profile。 |
 | D1A-2 | frame 1051 PDL=1.0 binary PLY baseline asset scope | RESOLVED_USER_CONFIRMED | 阶段 1A 只生成 frame 1051 非空 tile 的 `PDL = 1.0` binary PLY baseline。 |
+| D1B-1 | low-PDL sampling traceability and pending selection | PENDING_USER_DECISION | 已追溯 low-PDL 采样证据，但最终采样作用域、嵌套、seed 与取整规则仍待研究者确认。 |
 
 ## D0B-1 pilot source frame
 
@@ -134,3 +135,15 @@
 - 未确认边界：`PDL = 0.2 / 0.4 / 0.6 / 0.8`、降采样算法、Draco DRC、BIN、XML、player manifest、正式 asset catalog、Stage2Input 和批量帧资产均不在阶段 1A 范围内。
 - 对后续实现的影响：后续应先审阅 frame 1051 baseline 的分块统计与加载可行性，再冻结低 PDL 采样规则并生成多质量 binary PLY。
 - 对论文或实验表述的影响：可表述为单帧 pilot 的 level-1 baseline 已生成并验证；不能表述为完整多质量资产集、完整压缩资产集或最终 Stage2 数据集已完成。
+
+## D1B-1 low-PDL sampling traceability and pending selection
+
+- 决策编号：D1B-1
+- 主题：低 PDL 采样语义追溯与待决选择
+- 状态：PENDING_USER_DECISION
+- 背景：阶段 1A 已完成 frame 1051 的 `PDL = 1.0` binary PLY baseline；进入低 PDL 资产生成前，需要追溯既有 `pcv-distance-quality-calibration` 中 `PDL = {0.2, 0.4, 0.6, 0.8}` 的真实采样语义，并判断其是否适合迁移到 tile-local pipeline。
+- 已获得的 calibration / legacy evidence：calibration 正式渲染路径使用 `buildNestedQualityGeometry`，对完整 PLY 的 Three.js geometry 使用 seeded permutation prefix sampling；点数规则为 `Math.max(1, Math.floor(sourcePointCount * qualityLevel))`；配置 seed 为 `20260530`，实际 `quality_seed` 由 source path 派生；正式 run 是 full-cloud rendering evidence，不是 isolated tile calibration。旧 A3 binary 质量组点数比例接近 `0.8/0.6/0.4`，但有限内容检查未支持逐级嵌套。
+- 尚未由研究者确认的最终采样规则：是否采用 tile-local 或 frame-global；是否强制 nested property；seed 如何由 frame/tile/profile 派生；小 tile 是否使用 `max(1, floor(N * p))`；是否同时记录 target PDL 与 actual retained ratio。
+- tile-local 与 frame-global 的取舍：tile-local 更适合 Stage2 的 tile-level independent candidate semantics，但属于 calibration 采样规则的 derived adaptation；frame-global 更接近 calibration 的 full-cloud scope，但每个 tile 的实际保留比例可能偏离目标 PDL。
+- 对后续实现的影响：下一阶段在研究者确认前不得直接生成 `PDL = 0.2 / 0.4 / 0.6 / 0.8` 资产；确认后应只对 frame 1051 非空 tile 生成多质量 binary PLY，并独立验证 nested property、点数比例和属性保真。
+- 对论文或实验表述的影响：可以将既有 calibration 表述为 full-cloud distance-quality calibrated evidence；tile-local 低 PDL 资产若采用同类算法，只能表述为 derived adaptation，不能写成 tile-level calibrated PDL。
