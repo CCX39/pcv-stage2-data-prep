@@ -1,18 +1,19 @@
 # Stage2 数据准备项目契约
 
-> 阶段 0C 更新：本阶段允许受控、只读的原始 PLY 几何扫描和 provisional grid probe；但仍禁止生成、复制、转换或保存正式点云资产，仍禁止正式切块、多质量版本生成、Draco 编码、XML 生成、asset catalog 生成和 Stage2Input 生成。
+> 阶段 0D 更新：本阶段允许对完整 Longdress 序列进行受控、只读的 raw-coordinate envelope 与 occupancy 扫描，用于验证 provisional G128 profile；仍禁止正式切块、点云格式转换、质量版本生成、Draco 编码、XML 生成、asset catalog 生成和 Stage2Input 生成。
 
 ## 1. 项目目的与范围
 
 本仓库服务于 Work1 Stage2 的真实数据准备与资产元数据工作。Stage2 的目标是在 Stage1 给定 `Budget_total` 后，为每个空间 tile 选择离散质量档位；本仓库未来负责提供可追溯的 tile 级多质量候选资产、资产元数据和后续 pilot 所需证据。
 
-阶段 0C 允许受控、只读的原始 PLY 几何扫描和 provisional grid probe；但仍禁止生成、复制、转换或保存正式点云资产，仍禁止正式切块、多质量版本生成、Draco 编码、XML 生成、asset catalog 生成和 Stage2Input 生成。
+阶段 0D 允许对完整 Longdress 序列进行受控、只读的 raw-coordinate envelope 与 occupancy 扫描，用于验证 provisional G128 profile；仍禁止正式切块、点云格式转换、质量版本生成、Draco 编码、XML 生成、asset catalog 生成和 Stage2Input 生成。
 
 ## 2. 当前已确认的数据准备方向
 
 ### 已确认
 
 - 第一轮真实资产 pilot 源帧为 8i Longdress 的 `longdress_vox10_1051.ply`，`frame_id = 1051`。该决定只冻结第一轮 pilot 的源帧。
+- `G128 = 4 x 8 x 4` 已确认为 frame 1051 单帧 pilot 的 provisional grid profile；该决定不等于全序列正式最终 grid 已冻结。
 - 新数据准备项目保留五个点密度质量档位：`PDL = {0.2, 0.4, 0.6, 0.8, 1.0}`。
 - `PDL = 1.0` 表示该 tile 的完整原始点集，不进行降采样。
 - 后续新管线的中间点云资产只使用 `binary little-endian PLY`。
@@ -132,7 +133,7 @@ Stage2Input JSON
 - 不复制、切块、转换或保存正式点云资产。
 - 不生成 binary PLY、DRC、BIN、XML、JSON manifest、asset catalog 或 Stage2Input。
 - 不运行导师脚本、旧播放器、Draco encoder 或 decoder。
-- 不设计、实现或冻结最终 grid；阶段 0C 的 grid probe 仅限受控、只读、provisional 证据收集。
+- 不设计、实现或冻结最终 grid；阶段 0D 的全序列 envelope 与 occupancy 扫描仅限受控、只读、provisional 证据收集。
 - 不冻结具体 `Nx × Ny × Nz`。
 - 不冻结 Draco 参数。
 - 不冻结 XML tag/schema。
@@ -149,7 +150,7 @@ Stage2Input JSON
 5. asset catalog、player manifest XML 与 Stage2Input 的具体字段和互相关联方式。
 6. 空 tile 是否进入 Stage2Input 或播放器 XML。
 7. `r_bytes`、`d_ms` 与相机相关字段的正式口径。
-8. 基于阶段 0C grid probe 结果的候选 grid 取舍、补充 probe 范围与冻结流程。
+8. 基于阶段 0D 全序列 envelope 与 G128 occupancy 结果的正式 pilot grid profile 审阅、调整与冻结流程。
 
 ## 10. 文档维护规则
 

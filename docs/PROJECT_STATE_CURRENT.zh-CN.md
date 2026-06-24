@@ -14,9 +14,9 @@
 
 ## 3. 当前阶段
 
-阶段 0C：原始坐标空间 grid probe 与播放器 XML 消费契约静态审查
+阶段 0D：全序列 raw-coordinate envelope 扫描与 G128 全序列占用验证
 
-阶段 0C 已完成。本阶段只完成了 raw-coordinate grid probe 与播放器 XML 静态消费审查；未实现正式切块，不生成正式 PLY、DRC、BIN、XML、manifest、asset catalog 或 Stage2Input，也未运行旧播放器、导师脚本或 Draco 工具。
+阶段 0D 已完成。本阶段完成了 Longdress 1051-1350 全 300 帧 raw-coordinate envelope 扫描与 G128 occupancy 验证；未实现正式切块，不生成正式 PLY、DRC、BIN、XML、manifest、asset catalog 或 Stage2Input，也未运行旧播放器、导师脚本或 Draco 工具。
 
 ## 4. 已完成工作
 
@@ -24,12 +24,14 @@
 - 阶段 0A.1：研究者补录旧 DASH 风格资产组织、A1/A2 ASCII 路径弃用、binary PLY 优先等历史说明。
 - 阶段 0B：已建立数据准备契约、决策日志和状态文档。
 - 阶段 0C：已完成 frame 1051 为 pilot 的受控 raw-coordinate grid probe，并静态审查旧播放器对 DASH 风格自定义 XML 的消费路径。
+- 阶段 0D：已完成 Longdress 全序列 raw-coordinate envelope 扫描，并在完整 envelope 下验证 G128 全序列 occupancy。
 
 ## 5. 当前已确认决策
 
 - 第一轮真实资产 pilot 源帧为 8i Longdress 的 `longdress_vox10_1051.ply`，`frame_id = 1051`。
 - 后续新数据准备管线采用全序列共享、固定的空间坐标网格方向。
 - 新管线使用均匀空间划分，不采用人体语义分割。
+- `G128 = 4 x 8 x 4` 已被研究者确认为 frame 1051 单帧 pilot 的 provisional grid profile；该决定不等于全序列正式最终 grid 已冻结。
 - 新项目保留五个 PDL 档位：`{0.2, 0.4, 0.6, 0.8, 1.0}`，其中 `PDL = 1.0` 为完整原始点集。
 - 新中间点云资产只使用 binary little-endian PLY。
 - DRC 必须由对应质量档位的 binary PLY 生成。
@@ -59,6 +61,9 @@
 - 阶段 0C 对 frames `1051, 1125, 1200, 1275, 1350` 完成 raw-coordinate bbox probe；5 帧 bbox 并集 provisional envelope 为 min `(27, 3, 22)`、max `(459, 1012, 570)`。
 - 阶段 0C 对 frame 1051 的候选 profile 进行 occupancy probe：G54 有 25 个非空 tile，最大 tile point share 为 `0.121253`；G128 有 46 个非空 tile，最大 tile point share 为 `0.049999`。G54/G128 均只是候选 probe profile，最终 grid 尚未冻结。
 - 阶段 0C 静态审查显示，旧后端 `app.py` 的 `/mpd/<video_id>` 只负责返回 `static/xml/<video_id>.xml`；`/gof_v10` 主要消费 JSON 字段 `video_id`、`gof_id`、`as_id`、`rep_id` 并按目录规则读取 A3/A4/A5 资产，未在后端直接解析 XML tag/attribute。
+- 阶段 0D 完成 1051-1350 全 300 帧 raw-coordinate envelope 扫描；完整 envelope 为 min `(0, 0, 0)`、max `(481, 1023, 660)`，对应 derived provisional G128 `cell_size = (120.25, 127.875, 165)`。
+- 阶段 0D 在完整 envelope 下验证 G128 occupancy：每帧 non-empty tile count 的 min / median / mean / max 为 `37 / 45 / 44.48 / 53`；128 个 theoretical tile 中有 20 个从未激活。
+- 阶段 0D 中 frame 1051 在完整 envelope 下的 G128 non-empty tile count 为 `40`，maximum tile point share 为 `0.057920`。完整 envelope 与 cell_size 仍是 derived provisional 参数，尚需研究者审阅后才可考虑冻结正式 grid profile。
 - 导师脚本包路径：`E:\Miunaaaa\0-work\code\MENTOR_SCRIPT_PACKAGE_vv_preprocess`。该脚本包仅作为静态参考资产。
 
 ## 8. 不可越过的边界
@@ -75,11 +80,11 @@
 
 ## 9. 下一阶段建议
 
-在不生成正式资产的前提下，研究者应先根据阶段 0C probe 结果选择、调整或补充候选 grid 方案，并决定新播放器 XML 的实际消费契约边界。
+研究者应审阅阶段 0D 的全序列 envelope 与 G128 全序列占用结果，决定是否冻结正式 pilot grid profile。
 
-下一阶段应优先回答：是否以 G128 继续推进、是否需要更多帧的只读 bbox/occupancy probe、旧播放器兼容层是否需要直接消费 `SegmentTemplate` 或继续由后端 API 目录规则驱动、空 tile 在播放器资源层如何表达、哪些元数据属于 asset catalog 而不是 Stage2Input。
+下一阶段应优先回答：是否接受 full-sequence raw-coordinate envelope `(0, 0, 0)` 到 `(481, 1023, 660)`，是否接受 G128 full-sequence provisional `cell_size = (120.25, 127.875, 165)`，是否需要调整 grid 或边界规则，以及 never-active tile 在 metadata / player manifest XML / Stage2Input 中如何表达。
 
-下一阶段仍不应直接批量切块、批量生成多质量 PLY、批量 Draco 编码或完整 XML 生成。
+研究者确认后，再进入单帧正式切块与 level-1 binary PLY 基线生成准备。下一阶段仍不应直接批量生成多质量 PLY、批量 Draco 编码或完整 XML 生成。
 
 ## 10. 文档与仓库维护规则
 

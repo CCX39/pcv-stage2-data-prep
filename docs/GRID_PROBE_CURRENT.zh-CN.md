@@ -225,3 +225,17 @@ G128 降序摘要前 12 个 tile：
 5. 播放器资源层是否能够接受比旧 12-cell 更细的 cell/tile 数量。
 
 本阶段结果更适合支持下一轮讨论，不适合直接启动批量切块或批量编码。
+
+## 13. 研究者后续决策
+
+研究者已确认：
+
+```text
+G128 = 4 x 8 x 4
+```
+
+该 grid profile 仅作为 `longdress_vox10_1051.ply` / frame 1051 单帧 pilot 的 provisional grid profile。
+
+该决定不等于全序列正式最终 grid 已冻结；也不冻结正式 `tile_id`、正式边界规则、正式 manifest schema、Draco 参数或 PDL 采样算法。
+
+阶段 0D 将基于全序列 raw-coordinate envelope 进一步验证该 profile 的占用情况。

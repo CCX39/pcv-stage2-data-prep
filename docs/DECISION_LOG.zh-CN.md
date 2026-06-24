@@ -10,6 +10,7 @@
 | D0B-6 | DASH-style player manifest direction | DIRECTION_CONFIRMED_DETAILS_PENDING | 后续需要 DASH 风格自定义播放器资源清单 XML，但 schema 与消费契约未冻结。 |
 | D0B-7 | old asset and mentor script reuse boundary | RESOLVED_USER_CONFIRMED | 旧资产和导师脚本仅作静态参考，不整体复用、不直接运行。 |
 | D0B-8 | project state document maintenance rule | RESOLVED_USER_CONFIRMED | 后续每阶段结束必须更新项目状态文档，决策变化同步更新决策日志。 |
+| D0D-1 | G128 single-frame pilot provisional grid profile | RESOLVED_USER_CONFIRMED | `G128 = 4 x 8 x 4` 仅作为 Longdress frame 1051 单帧 pilot 的 provisional grid profile。 |
 
 ## D0B-1 pilot source frame
 
@@ -98,3 +99,14 @@
 - 未确认边界：具体阶段编号和未来文档拆分方式可随项目推进调整。
 - 对后续实现的影响：任何实现或审查任务收尾时都应检查是否需要更新状态、决策或契约。
 - 对论文或实验表述的影响：文档记录将作为实验资产语义与决策依据的可追溯来源。
+
+## D0D-1 G128 single-frame pilot provisional grid profile
+
+- 决策编号：D0D-1
+- 主题：G128 单帧 pilot provisional grid profile
+- 状态：RESOLVED_USER_CONFIRMED
+- 背景：阶段 0C 已比较 G54 与 G128 在少量帧 provisional envelope 下对 frame 1051 的占用情况。研究者随后确认先以 G128 作为单帧 pilot 的 provisional grid profile，并要求阶段 0D 对完整 Longdress 序列进行 raw-coordinate envelope 与 occupancy 验证。
+- 已确认内容：`G128 = 4 x 8 x 4`，仅作为 `longdress_vox10_1051.ply` / frame 1051 单帧 pilot 的 provisional grid profile。
+- 未确认边界：全序列正式 envelope、正式 grid origin、正式 cell_size、正式 `tile_id`、正式边界规则、是否适用于全序列正式资产生成均未冻结。
+- 对后续实现的影响：可以围绕 G128 做全序列 raw-coordinate occupancy 验证和单帧 pilot 准备；在研究者审阅并确认前，不能将 G128 写成正式最终 grid，也不能启动正式切块或批量资产生成。
+- 对论文或实验表述的影响：可以表述为 pilot 阶段的 provisional grid profile 已由研究者确认；不能表述为最终实验网格参数或全序列正式资产网格已确定。
