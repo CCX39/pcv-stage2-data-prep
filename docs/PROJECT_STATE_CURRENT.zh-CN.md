@@ -16,11 +16,13 @@
 
 ## 3. 当前阶段
 
-阶段 1B：低 PDL 采样语义追溯、tile-local 适配分析与质量层级契约准备
+阶段 1B.1：README 文档导航完善与项目交接可读性检查
 
 阶段 1A 已完成并验证 frame 1051 的 `PDL = 1.0` binary PLY baseline。
 
 阶段 1B 已完成低 PDL 采样语义追溯与 tile-local 适配分析，但尚未生成 `PDL = 0.2 / 0.4 / 0.6 / 0.8` 资产。本轮未生成 Draco DRC、BIN、XML、player manifest、正式 asset catalog、Stage2Input 或批量帧资产；未运行旧播放器、导师脚本、Draco 工具或 calibration 正式实验。
+
+阶段 1B.1 已完成 README 文档导航与交接可读性维护。README 现作为仓库根目录的项目入口，集中说明项目定位、当前状态、推荐阅读顺序、文档职责、本地资产目录边界与 Git 协作方式。本轮没有新增、修改或冻结任何研究决策；`D1B-1` 仍为 `PENDING_USER_DECISION`。
 
 ## 4. 已完成工作
 
@@ -31,6 +33,7 @@
 - 阶段 0D：已完成 Longdress 全序列 raw-coordinate envelope 扫描，并在完整 envelope 下验证 G128 全序列 occupancy。
 - 阶段 1A：已完成 frame 1051 fixed-grid `PDL = 1.0` binary PLY baseline 生成与独立验证。
 - 阶段 1B：已完成低 PDL 采样语义追溯、旧质量资产有限检查和 tile-local / frame-global 适配分析。
+- 阶段 1B.1：已完成 README 文档导航与项目交接可读性维护。
 
 ## 5. 当前已确认决策
 
@@ -79,6 +82,7 @@
 - 阶段 1A source vertex count 为 `765821`；生成 binary PLY 文件数为 `40`；独立验证确认点数守恒、空 tile 无 PLY、所有输出 PLY 为 `binary_little_endian 1.0`，并确认 source / output canonical record digest 一致。
 - 阶段 1B 追溯 `pcv-distance-quality-calibration`：正式 run 使用 `buildNestedQualityGeometry` 对完整 PLY geometry 做 seeded permutation prefix sampling；低质量点数规则为 `Math.max(1, Math.floor(sourcePointCount * qualityLevel))`。
 - 阶段 1B 对旧 `GOF_1/A3_ply_binary/frame_0/cell_0` 质量组做有限只读检查：`R2_0.8` 是 `R1` 子集，但 `R3_0.6` 不是 `R2_0.8` 子集，`R4_0.4` 不是 `R3_0.6` 子集；旧质量资产不能用来冻结新 pipeline 的嵌套 PDL 语义。
+- 阶段 1B.1 已将 `README.md` 更新为仓库根目录导航入口，覆盖项目定位、当前状态、推荐阅读顺序、文档职责、代码与本地资产边界、关键语义边界和 Git 协作规则。
 - 导师脚本包路径：`E:\Miunaaaa\0-work\code\MENTOR_SCRIPT_PACKAGE_vv_preprocess`。该脚本包仅作为静态参考资产。
 
 ## 8. 不可越过的边界
@@ -96,9 +100,11 @@
 
 ## 9. 下一阶段建议
 
-下一阶段应在研究者确认采样契约后，仅对 frame 1051 的非空 tile 生成多质量 binary PLY，并独立验证 nested property、点数比例和属性保真。
+下一步仍应由研究者审阅 `docs/PDL_SAMPLING_AUDIT.zh-CN.md`，确认 low-PDL 的 sampling scope、nested property、seed derivation、target point-count rounding，以及 target PDL 与 actual retained ratio 的记录方式。
 
-当前必须由研究者确认：低 PDL 最终采样作用域、嵌套策略、随机性或稳定排序策略、目标点数取整规则，以及小 tile 的保底与 actual ratio 记录方式。
+当前必须由研究者确认：低 PDL 最终采样作用域、嵌套策略、随机性或稳定排序策略、目标点数取整规则，以及小 tile 的保底与 actual ratio 记录方式。在研究者确认前，不得生成 `PDL = 0.2 / 0.4 / 0.6 / 0.8` 的 tile PLY。
+
+研究者确认采样契约后，下一阶段才应仅对 frame 1051 的非空 tile 生成多质量 binary PLY，并独立验证 nested property、点数比例和属性保真。
 
 下一阶段仍不应直接批量生成全序列资产、直接生成 DRC、直接生成 XML 或直接生成 Stage2Input。
 
