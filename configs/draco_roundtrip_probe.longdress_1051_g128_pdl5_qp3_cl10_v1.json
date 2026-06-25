@@ -1,0 +1,41 @@
+{
+  "profile_id": "draco_roundtrip_probe_longdress_1051_g128_pdl5_qp3_cl10_v1",
+  "profile_scope": "Controlled stage 2B round-trip probe for frame 1051, two representative G128 non-empty tiles, five source PDL levels, and qp values 8/10/12. This is not the final full DRC corpus profile.",
+  "dataset_id": "8i_longdress",
+  "frame_id": 1051,
+  "grid_profile_id": "longdress_raw_g128_fullseq_pilot_v1",
+  "source_artifact_root": "artifacts/pilot_1051_g128_tilelocal_pdl5_v1",
+  "source_artifact_profile_id": "longdress_1051_g128_tilelocal_pdl5_v1",
+  "candidate_source_pdls": [0.2, 0.4, 0.6, 0.8, 1.0],
+  "candidate_qp_values": [8, 10, 12],
+  "codec_id": "draco",
+  "point_cloud_mode": true,
+  "point_cloud_flag": "-point_cloud",
+  "compression_level": 10,
+  "compression_level_flag": "-cl",
+  "position_quantization_flag": "-qp",
+  "encoder_command": "draco_encoder",
+  "decoder_command": "draco_decoder",
+  "expected_encoder_sha256": "EF2BDDC544E46CBA1396037998055A51517D867E9374AD26A4C69947C47AC4C6",
+  "expected_decoder_sha256": "CA931DFBBD7EA70311F6642147FF495EDD4682C120AF365F797CFACA2EFF3460",
+  "color_control": {
+    "input_attribute": "uint8_rgb",
+    "cli_quantization_status": "not_exposed_by_current_encoder_cli",
+    "active_variant_dimension": false,
+    "roundtrip_check": "per_point_exact_rgb_pending_actual_probe"
+  },
+  "representative_tile_selection": {
+    "source": "frame_1051_tile_index.json",
+    "min_nonempty": true,
+    "max_nonempty": true,
+    "tie_break": "canonical_tile_id_lexicographic"
+  },
+  "non_claims": [
+    "not the full 600-file frame 1051 DRC corpus",
+    "not a formal asset catalog",
+    "not Stage2Input",
+    "not target-side decode-cost measurement",
+    "not DRC-aware rendered quality calibration",
+    "not a color-control or color-compression study"
+  ]
+}

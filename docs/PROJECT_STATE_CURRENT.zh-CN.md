@@ -16,7 +16,7 @@
 
 ## 3. 当前阶段
 
-阶段 2A：复合 DRC 表示契约冻结、Draco CLI 事实确认与 Stage2 理论接口交接
+阶段 2B.1：Draco round-trip 的 order-independent 验证修正与 probe 收敛
 
 阶段 1A 已完成并验证 frame 1051 的 `PDL = 1.0` binary PLY baseline。
 
@@ -31,6 +31,7 @@
 阶段 1D.1 已完成 multi-PDL generator 的 staging publish retry 维护与 multi-PDL validator 的 root-level provenance 验证加固。本轮没有重新运行真实 multi-PDL 资产生成，没有重新采样，没有改写 PLY，没有修改 sampling profile、grid profile、现有 artifact schema 或阶段 1D 的研究语义。generator 现在仅对 staging -> final root 发布阶段的 transient `PermissionError` 做 20 次总尝试、0.25 秒间隔的有限重试；validator 现在额外覆盖 profile snapshots、manifest-level provenance hashes、baseline references 和 root-level aggregate summaries。
 
 阶段 2A 已完成 composite DRC representation candidate family 语义记录、BIN exclusion 确认、Draco CLI read-only audit 与 Stage2 theory handoff 文档。本阶段没有执行 PLY -> DRC 编码、DRC -> PLY 解码、round-trip verification、DRC 文件大小测量、decode-cost benchmark、DRC-aware `Q_base` 建模、Pareto pruning、lookup projection 或 solver-side variant-aware contract update。
+阶段 2B 已完成 frame 1051 双代表 tile 的 Draco PLY -> DRC -> PLY round-trip probe，生成 30 个 DRC 与 30 个 decoded PLY，均保存在 Git ignored artifact root 中。阶段 2B.1 没有重新编码、重新解码、删除或重建该 probe root；本轮将 validator 修正为 order-independent point-set contract，并基于既有 probe artifact 完成独立验证。
 
 ## 4. 已完成工作
 
@@ -46,6 +47,7 @@
 - 阶段 1D：已完成 frame 1051 五档 binary PLY pilot 资产生成与独立验证。
 - 阶段 1D.1：已完成 multi-PDL staging publish retry 单元测试与 root-level provenance validator 加固。
 - 阶段 2A：已完成 DRC candidate family 文档冻结、Draco CLI 无输入事实审查和 Stage2 composite variant 理论接口交接说明。
+- 阶段 2B / 2B.1：已完成两个代表性非空 tile 的 30-variant Draco round-trip probe，并在 order-independent validation contract 下通过独立验证。
 
 ## 5. 当前已确认决策
 
@@ -65,7 +67,8 @@
 - metadata 必须同时记录 `target_pdl` 与 `actual_retained_ratio`。
 - 阶段 1D 确认在 multi-PDL root 中，`PDL = 1.0` 必须逐字节复制阶段 1A baseline，不重新切块或重新序列化。
 - 阶段 2A 确认 PDL 当前定位为 `source_pdl`，即 source point-density axis；后续 Stage2 delivery candidate 是由 `source_pdl` 与 Draco codec profile 组成的 composite representation variant。
-- 阶段 2A 确认当前第一版 DRC pilot candidate family 为：`source_pdl ∈ {0.2,0.4,0.6,0.8,1.0}`、`codec = Draco`、point-cloud mode required、`cl = 10`、`qc = 6`、`qp ∈ {8,10,12}`。这意味着每个非空 tile 后续预计 `15` 个 DRC variants；frame 1051 的 40 个非空 tile 后续完整 pilot corpus 预计为 `600` 个 DRC 文件，但当前尚未生成。
+- 阶段 2B.1 后的当前 active DRC pilot candidate family 为：`source_pdl ∈ {0.2,0.4,0.6,0.8,1.0}`、`codec = Draco`、point-cloud mode required、`cl = 10`、`qp ∈ {8,10,12}`。当前 native encoder help 未暴露 `-qc`，因此 `qc` 不进入当前 variant identity、file name、generation command 或 metadata 作为已生效参数。这意味着每个非空 tile 后续预计 `15` 个 DRC variants；frame 1051 的 40 个非空 tile 后续完整 pilot corpus 预计为 `600` 个 DRC 文件，但当前仅完成两个代表 tile 的 30-variant probe。
+- 阶段 2B.1 确认 decoded point record order 不作为 DRC delivery 正确性不变量；round-trip geometry 使用 order-independent bidirectional point-set validation，RGB 使用 exact triplet multiset preservation 与高置信 mutual-nearest spatial correspondence 下的 local exact RGB evidence。
 - 阶段 2A 确认 binary PLY 是 source/reference/round-trip validation baseline，DRC 是后续 delivery representation candidate，BIN 当前项目范围明确排除。
 - calibration 正式低质量渲染使用 seeded nested prefix sampling；这是 full-cloud rendering evidence，不是 tile-level isolated calibration。阶段 1C 的 tile-local profile 是该采样规则的 derived adaptation。
 - 新中间点云资产只使用 binary little-endian PLY。
@@ -84,7 +87,7 @@
 - `r_bytes`、`d_ms`、visibility、screen_area、distance_norm 等字段的正式 provenance 和生成规则。
 - 是否将 frame 1051 tile-local sampling profile 推广到后续少量帧或全序列实验。
 - frame 1051 五档 binary PLY 是否进入后续播放器加载 sanity check、Draco pilot 或轻量 metadata/catalog 设计。
-- `qc=6` 在当前 `draco_encoder` executable 中的实际 CLI 可执行性。
+- RGB compression-control / color quantization CLI 的正式研究与替代参数选择。
 - DRC round-trip fidelity、DRC bytes、decode cost、DRC-aware `Q_base`、Pareto pruning 和 lookup projection。
 
 ## 7. 已有资产与关键证据
@@ -122,14 +125,15 @@
 - 阶段 1D.1 加固 `scripts/validate_pilot_multquality_binary_tiles.py`，新增 profile snapshot、manifest provenance hash、baseline provenance reference 和 root-level aggregate summary 验证；该加固不改变已生成 artifact 的研究语义。
 - 阶段 2A 新增 Draco CLI 审查文档：`docs/DRACO_TOOLCHAIN_AUDIT_CURRENT.zh-CN.md`。本机 PATH 中 `draco_encoder.exe` 与 `draco_decoder.exe` 可执行；encoder help 确认 point-cloud mode flag 为 `-point_cloud`，确认 `-cl` 与 `-qp` 可观察，未在 help 中观察到 `-qc`。
 - 阶段 2A 新增理论交接文档：`docs/STAGE2_COMPOSITE_VARIANT_THEORY_HANDOFF.zh-CN.md`。该文档说明 PDL-only lookup 与 composite DRC variant 的语义差异、lookup cap 问题、variant-aware local repair、Pareto pruning 的位置与条件，以及这些 solver-side 问题为何不阻塞当前 DRC data-prep。
+- 阶段 2B / 2B.1 新增 Draco round-trip probe 文档：`docs/DRACO_ROUNDTRIP_PROBE_CURRENT.zh-CN.md`。当前 probe root 为 `artifacts/draco_roundtrip_probe_1051_g128_pdl5_qp3_cl10_v1/`，包含两个代表 tile 的 30 个 DRC 与 30 个 decoded PLY；order-independent validator 确认几何双向点集检查、RGB multiset、高置信 local RGB association、provenance 与 `qp` effect 均通过。
 - 导师脚本包路径：`E:\Miunaaaa\0-work\code\MENTOR_SCRIPT_PACKAGE_vv_preprocess`。该脚本包仅作为静态参考资产。
 
 ## 8. 不可越过的边界
 
-- 不生成 DRC、BIN、XML、player manifest、正式 asset catalog 或 Stage2Input。
+- 不生成全量 DRC corpus、BIN、XML、player manifest、正式 asset catalog 或 Stage2Input。
 - 不生成其他 frame 或全序列资产，直到研究者确认下一阶段范围。
-- 不运行导师脚本、旧播放器或任何 Draco 实际编码/解码命令；阶段 2A 的无输入 help/version 审查仅用于记录 CLI 事实。
-- 不把阶段 2A 的 Draco candidate family 写成已完成实际编码、round-trip 验证、最优 codec profile 或正式 R/D/Q evidence。
+- 不运行导师脚本或旧播放器；不在阶段 2B.1 重新运行 Draco 编码/解码，不覆盖或重建既有 30-variant probe artifact。
+- 不把阶段 2B 的双代表 tile probe 写成全量 600 DRC corpus、最优 codec profile 或正式 R/D/Q evidence。
 - 不把 PLY-only distance lookup 直接写成 composite DRC variant hard cap。
 - 不把 frame 1051 pilot profile 写成官方世界坐标、物理米制网格、最优 grid 或最终全序列实验 grid。
 - 不冻结 Draco 参数。
@@ -140,9 +144,9 @@
 
 ## 9. 下一阶段建议
 
-下一阶段建议进入阶段 2B：受控 DRC round-trip probe。目标是先用少量代表性 non-empty tile，覆盖 `PDL × qp` candidate family，验证当前安装 Draco CLI、point-cloud mode、PLY -> DRC -> PLY 过程、几何与 RGB 解析口径、命名与 provenance，再决定是否全量生成 `40 × 15 = 600` 个 DRC。
+下一阶段建议进入阶段 2C：frame 1051 全部 40 个 non-empty tiles × 5 source_pdl × 3 qp，生成 600 个 DRC delivery variants，并建立 frame-level pilot metadata / validation artifact。
 
-下一阶段不应直接批量生成全部 DRC 且跳过 round-trip 验证；也不应直接生成 XML、正式 asset catalog、Stage2Input、多帧或全序列资产，除非研究者先冻结对应范围与契约。
+阶段 2C 完成后，Stage2 可开始使用真实 DRC byte size 与真实 composite variant identity 进行 frame-level pilot；`D(i,v)` 与 `Q_base(i,v)` 尚未测得时必须明确标注 proxy / pending。下一阶段仍不应直接生成 XML、正式 asset catalog、Stage2Input、多帧或全序列资产，除非研究者先冻结对应范围与契约。
 
 ## 10. 文档与仓库维护规则
 

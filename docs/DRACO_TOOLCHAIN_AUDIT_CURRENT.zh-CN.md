@@ -116,15 +116,15 @@ qp ∈ {8, 10, 12}
 
 - `cl=10`、`qp={8,10,12}` 的 option 名称可由当前 encoder help 直接观察到；
 - point-cloud mode 的当前 CLI 写法可由 help 确认为 `-point_cloud`；
-- `qc=6` 是研究者确认的 pilot candidate family 成员，但当前 help 未显示 `-qc`，因此实际 CLI 拼写或是否可执行仍需阶段 2B round-trip probe 验证。
+- `qc=6` 是阶段 2A 记录的历史 candidate family 成员，但当前 help 未显示 `-qc`。阶段 2B/2B.1 的实际 probe 已收敛为不使用 `-qc`，因此 `qc` 不进入当前 active variant identity。
 
 ## 8. 尚未验证事项
 
 本阶段尚未确认：
 
 - `draco_encoder` 是否能成功编码当前 binary little-endian PLY tile；
-- `-qc 6` 在当前 executable 中的实际可接受性；
-- `-point_cloud -cl 10 -qp {8,10,12}` 与 `qc=6` 组合是否可成功执行；
+- RGB compression-control / color quantization CLI 的正式研究；
+- `-point_cloud -cl 10 -qp {8,10,12}` 在全量 600-file corpus 中的可重复执行性；
 - PLY -> DRC -> PLY round-trip correctness；
 - 坐标与 RGB 属性 round-trip 后的解析与保真口径；
 - DRC 文件大小；
@@ -133,4 +133,25 @@ qp ∈ {8, 10, 12}
 
 ## 9. 后续建议
 
-阶段 2B 应先做受控 DRC round-trip probe：选择少量代表性 non-empty tile，覆盖 `source_pdl × qp` candidate family，验证当前安装 Draco CLI、`-point_cloud` 写法、`qc` 参数可用性、命名与 provenance，再决定是否进入完整 `40 × 15 = 600` 个 DRC 文件的 pilot corpus 生成。
+阶段 2B 应先做受控 DRC round-trip probe：选择少量代表性 non-empty tile，覆盖 `source_pdl × qp` candidate family，验证当前安装 Draco CLI、`-point_cloud` 写法、命名、provenance、几何 round-trip 与 RGB 默认处理结果，再决定是否进入完整 `40 × 15 = 600` 个 DRC 文件的 pilot corpus 生成。
+
+## 10. 阶段 2B.1 颜色属性与 qc 状态更新
+
+阶段 2B / 2B.1 的实际 probe 没有使用 `-qc`，也没有把 `qc` 写入 DRC 文件名、variant identity 或 metadata 作为已生效参数。当前 native `draco_encoder` help 未暴露 `-qc`；此前 `qc=4/6/8` 没有观察到明显 DRC bytes 或视觉变化，但本轮不对原因作最终归因。
+
+因此，阶段 2B.1 后的当前 active DRC variant dimension 收敛为：
+
+```text
+source_pdl × qp
+```
+
+其中：
+
+```text
+point-cloud mode = -point_cloud
+cl = 10
+qp ∈ {8, 10, 12}
+qc = 不进入当前 active variant identity / file name / generation command / metadata
+```
+
+`qc=6` 仅保留为阶段 2A 的历史 candidate family 说明，不再表述为当前已生效 codec profile。RGB 默认处理已经通过阶段 2B.1 的 order-independent round-trip validator 记录为：RGB triplet multiset 完全一致，高置信空间对应点对的 RGB 完全一致。颜色量化控制机制、替代 CLI 参数和 RGB 压缩敏感性属于 future investigation，不阻塞当前 `source_pdl × qp` DRC pipeline。
