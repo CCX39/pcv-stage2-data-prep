@@ -16,6 +16,7 @@ import os
 import shutil
 import struct
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -43,6 +44,8 @@ EXPECTED_EMPTY = 88
 MASK32 = 0xFFFFFFFF
 RNG_INCREMENT = 0x6D2B79F5
 SEED_MIX_MULTIPLIER = 16777619
+PUBLISH_MAX_ATTEMPTS = 20
+PUBLISH_RETRY_DELAY_SECONDS = 0.25
 
 
 class MultiPdlGenerationError(RuntimeError):
@@ -317,15 +320,44 @@ def file_record(
     return record
 
 
-def publish_staging(staging_root: Path, artifact_root: Path) -> None:
+def rename_staging_once(staging_root: Path, artifact_root: Path) -> None:
+    staging_root.rename(artifact_root)
+
+
+def publish_staging(
+    staging_root: Path,
+    artifact_root: Path,
+    *,
+    publish_once=rename_staging_once,
+    sleep_func=time.sleep,
+    max_attempts: int = PUBLISH_MAX_ATTEMPTS,
+    retry_delay_seconds: float = PUBLISH_RETRY_DELAY_SECONDS,
+) -> int:
     last_error: Exception | None = None
-    for _ in range(20):
+    for attempt in range(1, max_attempts + 1):
         try:
-            staging_root.rename(artifact_root)
-            return
+            publish_once(staging_root, artifact_root)
+            return attempt
         except PermissionError as exc:
             last_error = exc
-    raise MultiPdlGenerationError(f"Could not publish staging root {staging_root}: {last_error}")
+            if attempt < max_attempts:
+                sleep_func(retry_delay_seconds)
+
+    cleanup_note = ""
+    if staging_root.exists() and not artifact_root.exists():
+        try:
+            shutil.rmtree(staging_root)
+            cleanup_note = "; staging cleanup succeeded"
+        except Exception as cleanup_error:
+            cleanup_note = (
+                f"; failed to clean staging root after publish retry exhaustion: {cleanup_error}; "
+                f"residual staging path: {staging_root}"
+            )
+    raise MultiPdlGenerationError(
+        "Could not publish staging root after "
+        f"{max_attempts} attempts; staging path: {staging_root}; target path: {artifact_root}; "
+        f"last PermissionError: {last_error}{cleanup_note}"
+    )
 
 
 def run(args: argparse.Namespace) -> dict[str, Any]:
@@ -555,7 +587,13 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         return generation_manifest
     except Exception:
         if staging_root.exists() and not artifact_root.exists():
-            shutil.rmtree(staging_root, ignore_errors=True)
+            try:
+                shutil.rmtree(staging_root)
+            except Exception as cleanup_error:
+                raise MultiPdlGenerationError(
+                    f"Generation failed and staging cleanup failed; residual staging path: {staging_root}; "
+                    f"cleanup error: {cleanup_error}"
+                ) from cleanup_error
         raise
 
 

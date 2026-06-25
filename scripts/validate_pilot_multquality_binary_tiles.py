@@ -45,6 +45,8 @@ class MultiPdlValidationError(RuntimeError):
 def load_json(path: Path) -> dict[str, Any]:
     if not path.is_file():
         raise MultiPdlValidationError(f"Required JSON file not found: {path}")
+    if path.stat().st_size == 0:
+        raise MultiPdlValidationError(f"Required JSON file is empty: {path}")
     with path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
 
@@ -53,12 +55,31 @@ def write_json(path: Path, data: Any) -> None:
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def write_json_if_changed(path: Path, data: Any) -> None:
+    text = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
+    if path.is_file() and path.read_text(encoding="utf-8") == text:
+        return
+    path.write_text(text, encoding="utf-8")
+
+
 def sha256_file(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def same_resolved_path(recorded: str, expected: Path) -> bool:
+    try:
+        return Path(recorded).resolve() == expected.resolve()
+    except OSError:
+        return False
+
+
+def require_equal(label: str, observed: Any, expected: Any) -> None:
+    if observed != expected:
+        raise MultiPdlValidationError(f"{label} mismatch: expected {expected!r}, observed {observed!r}")
 
 
 def u32(value: int) -> int:
@@ -180,6 +201,105 @@ def all_tile_ids(grid_profile: dict[str, Any]) -> set[str]:
     }
 
 
+def validate_profile_snapshots(
+    artifact_root: Path,
+    grid_profile_path: Path,
+    sampling_profile_path: Path,
+    grid_profile: dict[str, Any],
+    sampling_profile: dict[str, Any],
+    manifest: dict[str, Any],
+) -> None:
+    grid_snapshot_path = artifact_root / "grid_profile_snapshot.json"
+    sampling_snapshot_path = artifact_root / "sampling_profile_snapshot.json"
+    grid_snapshot = load_json(grid_snapshot_path)
+    sampling_snapshot = load_json(sampling_snapshot_path)
+
+    expected_grid_hash = sha256_file(grid_profile_path)
+    expected_sampling_hash = sha256_file(sampling_profile_path)
+    observed_grid_hash = grid_snapshot.get("grid_profile_sha256")
+    observed_sampling_hash = sampling_snapshot.get("sampling_profile_sha256")
+    if observed_grid_hash != expected_grid_hash:
+        raise MultiPdlValidationError(
+            "grid profile snapshot hash mismatch: "
+            f"snapshot path={grid_snapshot_path}; source config path={grid_profile_path}; "
+            f"expected hash={expected_grid_hash}; observed hash={observed_grid_hash}"
+        )
+    if observed_sampling_hash != expected_sampling_hash:
+        raise MultiPdlValidationError(
+            "sampling profile snapshot hash mismatch: "
+            f"snapshot path={sampling_snapshot_path}; source config path={sampling_profile_path}; "
+            f"expected hash={expected_sampling_hash}; observed hash={observed_sampling_hash}"
+        )
+    if grid_snapshot.get("grid_profile") != grid_profile:
+        raise MultiPdlValidationError(
+            f"grid profile snapshot content mismatch: snapshot path={grid_snapshot_path}; "
+            f"source config path={grid_profile_path}"
+        )
+    if sampling_snapshot.get("sampling_profile") != sampling_profile:
+        raise MultiPdlValidationError(
+            f"sampling profile snapshot content mismatch: snapshot path={sampling_snapshot_path}; "
+            f"source config path={sampling_profile_path}"
+        )
+    require_equal("manifest grid_profile_sha256", manifest.get("grid_profile_sha256"), expected_grid_hash)
+    require_equal("manifest sampling_profile_sha256", manifest.get("sampling_profile_sha256"), expected_sampling_hash)
+
+
+def validate_manifest_provenance(
+    artifact_root: Path,
+    baseline_root: Path,
+    grid_profile_path: Path,
+    sampling_profile_path: Path,
+    manifest: dict[str, Any],
+    tile_index: dict[str, Any],
+    baseline_manifest: dict[str, Any],
+    baseline_index: dict[str, Any],
+    sampling_profile: dict[str, Any],
+) -> None:
+    require_equal("manifest artifact_profile_id", manifest.get("artifact_profile_id"), sampling_profile["sampling_profile_id"])
+    require_equal("manifest dataset_id", manifest.get("dataset_id"), sampling_profile["dataset_id"])
+    require_equal("manifest frame_id", manifest.get("frame_id"), sampling_profile["frame_id"])
+    require_equal("manifest quality_levels", manifest.get("quality_levels"), sampling_profile["quality_levels"])
+    require_equal("manifest sampling_scope", manifest.get("sampling_scope"), sampling_profile["sampling_scope"])
+    require_equal("manifest sampling_method", manifest.get("sampling_method"), sampling_profile["sampling_method"])
+    require_equal("manifest pdl_1_0_policy", manifest.get("pdl_1_0_policy"), "byte_exact_copy_of_stage1a_baseline")
+    require_equal(
+        "manifest low_pdl_provenance_kind",
+        manifest.get("low_pdl_provenance_kind"),
+        "derived_adaptation_of_calibration_sampling_rule",
+    )
+    if not same_resolved_path(str(manifest.get("baseline_root")), baseline_root):
+        raise MultiPdlValidationError(
+            f"manifest baseline_root mismatch: expected {baseline_root.resolve()}, observed {manifest.get('baseline_root')!r}"
+        )
+    if not same_resolved_path(str(manifest.get("target_artifact_root")), artifact_root):
+        raise MultiPdlValidationError(
+            "manifest target_artifact_root mismatch: "
+            f"expected {artifact_root.resolve()}, observed {manifest.get('target_artifact_root')!r}"
+        )
+    require_equal(
+        "manifest baseline_generation_manifest_sha256",
+        manifest.get("baseline_generation_manifest_sha256"),
+        sha256_file(baseline_root / "generation_manifest.json"),
+    )
+    require_equal(
+        "manifest baseline_tile_index_sha256",
+        manifest.get("baseline_tile_index_sha256"),
+        sha256_file(baseline_root / "frame_1051_tile_index.json"),
+    )
+    require_equal("manifest baseline_validation_report_passed", manifest.get("baseline_validation_report_passed"), True)
+    require_equal("manifest source_file_name", manifest.get("source_file_name"), baseline_manifest.get("source_file_name"))
+    require_equal("manifest source_file_sha256", manifest.get("source_file_sha256"), baseline_manifest.get("source_file_sha256"))
+    require_equal("manifest source_vertex_count", manifest.get("source_vertex_count"), baseline_manifest.get("source_vertex_count"))
+    require_equal("manifest grid_profile_sha256", manifest.get("grid_profile_sha256"), sha256_file(grid_profile_path))
+    require_equal("manifest sampling_profile_sha256", manifest.get("sampling_profile_sha256"), sha256_file(sampling_profile_path))
+    require_equal("manifest total_tile_count", manifest.get("total_tile_count"), tile_index.get("tile_count"))
+    require_equal("manifest non_empty_tile_count", manifest.get("non_empty_tile_count"), tile_index.get("non_empty_tile_count"))
+    require_equal("manifest empty_tile_count", manifest.get("empty_tile_count"), tile_index.get("empty_tile_count"))
+    require_equal("baseline tile_count", baseline_index.get("tile_count"), EXPECTED_TILE_COUNT)
+    require_equal("baseline non_empty_tile_count", baseline_index.get("non_empty_tile_count"), EXPECTED_NON_EMPTY)
+    require_equal("baseline empty_tile_count", baseline_index.get("empty_tile_count"), EXPECTED_EMPTY)
+
+
 def validate_asset_metadata(
     asset: dict[str, Any],
     expected_relpath: str,
@@ -246,6 +366,29 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     tile_index = load_json(artifact_root / "frame_1051_tile_index.json")
     baseline_index = load_json(baseline_root / "frame_1051_tile_index.json")
     baseline_manifest = load_json(baseline_root / "generation_manifest.json")
+    baseline_validation = load_json(baseline_root / "validation_report.json")
+
+    if not baseline_validation.get("passed"):
+        raise MultiPdlValidationError("baseline validation_report.json is not marked passed")
+    validate_profile_snapshots(
+        artifact_root,
+        grid_profile_path,
+        sampling_profile_path,
+        grid_profile,
+        sampling_profile,
+        manifest,
+    )
+    validate_manifest_provenance(
+        artifact_root,
+        baseline_root,
+        grid_profile_path,
+        sampling_profile_path,
+        manifest,
+        tile_index,
+        baseline_manifest,
+        baseline_index,
+        sampling_profile,
+    )
 
     if manifest["artifact_profile_id"] != sampling_profile["sampling_profile_id"]:
         raise MultiPdlValidationError("generation_manifest artifact_profile_id mismatch")
@@ -266,6 +409,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     non_empty = 0
     empty = 0
     output_counts_by_pdl = {qlabel(q): 0 for q in sampling_profile["quality_levels"]}
+    ply_file_counts_by_pdl = {qlabel(q): 0 for q in sampling_profile["quality_levels"]}
 
     for tile in tile_index["tiles"]:
         tile_id = tile["tile_id"]
@@ -349,8 +493,19 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             if quality == 1.0:
                 if output_raw != baseline_raw:
                     raise MultiPdlValidationError(f"{tile_id} PDL 1.0: output is not byte-exact baseline copy")
-                if asset.get("baseline_source", {}).get("baseline_sha256") != baseline_tile["pdl_1_0_ply_sha256"]:
+                baseline_source = asset.get("baseline_source", {})
+                if not same_resolved_path(str(baseline_source.get("baseline_root")), baseline_root):
+                    raise MultiPdlValidationError(f"{tile_id} PDL 1.0: baseline source root mismatch")
+                if baseline_source.get("baseline_tile_id") != tile_id:
+                    raise MultiPdlValidationError(f"{tile_id} PDL 1.0: baseline source tile id mismatch")
+                if baseline_source.get("baseline_relative_path") != baseline_relpath:
+                    raise MultiPdlValidationError(f"{tile_id} PDL 1.0: baseline source relative path mismatch")
+                if baseline_source.get("baseline_sha256") != baseline_tile["pdl_1_0_ply_sha256"]:
                     raise MultiPdlValidationError(f"{tile_id} PDL 1.0: baseline source sha mismatch")
+                if int(baseline_source.get("baseline_file_size_bytes")) != int(
+                    baseline_tile["pdl_1_0_ply_file_size_bytes"]
+                ):
+                    raise MultiPdlValidationError(f"{tile_id} PDL 1.0: baseline source file size mismatch")
                 pdl1_copy_count += 1
             else:
                 expected_records = [baseline_records[index] for index in expected_indices]
@@ -359,6 +514,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 low_pdl_file_count += 1
             generated_file_count += 1
             output_counts_by_pdl[qlabel(quality)] += retained_count
+            ply_file_counts_by_pdl[qlabel(quality)] += 1
             expected_metadata_relpaths.add(expected_relpath)
 
     if non_empty != EXPECTED_NON_EMPTY or empty != EXPECTED_EMPTY:
@@ -384,6 +540,18 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         raise MultiPdlValidationError("manifest generated_low_pdl_ply_file_count mismatch")
     if int(manifest["generated_pdl_1_0_copy_count"]) != pdl1_copy_count:
         raise MultiPdlValidationError("manifest generated_pdl_1_0_copy_count mismatch")
+    if manifest["output_point_counts_by_pdl"] != output_counts_by_pdl:
+        raise MultiPdlValidationError(
+            f"manifest output_point_counts_by_pdl mismatch: expected {output_counts_by_pdl}, "
+            f"observed {manifest['output_point_counts_by_pdl']}"
+        )
+    expected_file_counts_by_pdl = {qlabel(q): EXPECTED_NON_EMPTY for q in sampling_profile["quality_levels"]}
+    if ply_file_counts_by_pdl != expected_file_counts_by_pdl:
+        raise MultiPdlValidationError(
+            f"per-PDL PLY file count mismatch: expected {expected_file_counts_by_pdl}, observed {ply_file_counts_by_pdl}"
+        )
+    if output_counts_by_pdl["1.0"] != int(manifest["source_vertex_count"]):
+        raise MultiPdlValidationError("PDL=1.0 aggregate does not equal source total point count")
     if manifest["source_file_sha256"] != baseline_manifest["source_file_sha256"]:
         raise MultiPdlValidationError("manifest source file sha does not match baseline")
 
@@ -421,7 +589,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "not tile-level calibrated visual quality evidence",
         ],
     }
-    write_json(artifact_root / "validation_report.json", report)
+    write_json_if_changed(artifact_root / "validation_report.json", report)
     return report
 
 

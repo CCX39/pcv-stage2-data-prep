@@ -210,6 +210,34 @@ nested_group_id = seed_identity
 artifacts/pilot_1051_g128_tilelocal_pdl5_v1/validation_report.json
 ```
 
+## 8.1 阶段 1D.1 发布与验证加固
+
+阶段 1D.1 是工程维护与验证加固，不改变阶段 1D 的 sampling semantics、资产范围、metadata 语义或 `PDL = 1.0` byte-exact copy policy。本轮没有重新运行 multi-PDL generator，也没有重新生成、覆盖或提交任何真实 PLY 资产。
+
+生成脚本的 staging 发布逻辑已加固：仅当 staging root 发布到 final artifact root 的 rename/replace 操作抛出 `PermissionError` 时，才进行有限次数重试。规则为：
+
+```text
+maximum attempts = 20
+retry interval = 0.25 seconds
+retry scope = staging -> final root publish only
+```
+
+非 `PermissionError` 不会被静默重试；第 20 次仍失败时生成器返回失败，不伪装成功 artifact，并报告 attempt count、staging path、target path 与最后一个 `PermissionError`。若本轮 staging cleanup 失败，错误信息会明确包含残留 staging path。
+
+新增单元测试覆盖两个情形：
+
+- transient `PermissionError`：前两次发布失败，第三次真实 rename 成功；
+- persistent `PermissionError`：20 次发布均失败，final root 不存在，staging 被清理，错误信息包含 attempts、staging path 与 target path。
+
+multi-PDL validator 也已扩充 root-level provenance 检查。在保留既有 PLY schema、sampling、nested property、record fidelity 与 per-asset metadata 检查的基础上，新增验证：
+
+- `grid_profile_snapshot.json` 与当前版本化 grid profile 的 SHA-256 和内容一致；
+- `sampling_profile_snapshot.json` 与当前版本化 sampling profile 的 SHA-256 和内容一致；
+- generation manifest 中的 profile hash、baseline root reference、baseline manifest hash、baseline tile index hash 与实际文件一致；
+- root-level tile 数量、非空/空 tile 数量、总 PLY 数量、各 PDL PLY 数量和各 PDL retained point aggregate 与实际解析结果一致；
+- `PDL = 1.0` aggregate 等于 source total point count；
+- 每个非空 tile 的 `PDL = 1.0` baseline provenance reference 与阶段 1A baseline root 闭环一致，并继续逐字节等于 baseline 对应 PLY。
+
 ## 9. 当前明确未做的内容
 
 阶段 1D 未生成或未冻结以下内容：

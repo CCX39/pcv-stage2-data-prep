@@ -16,7 +16,7 @@
 
 ## 3. 当前阶段
 
-阶段 1D：frame 1051 五档 binary PLY 真实生成与完整验证
+阶段 1D.1：multi-PDL artifact staging 发布健壮性与 root-level provenance 验证加固
 
 阶段 1A 已完成并验证 frame 1051 的 `PDL = 1.0` binary PLY baseline。
 
@@ -27,6 +27,8 @@
 阶段 1C 已完成 tile-local low-PDL sampling profile 冻结与参考实现一致性验证：five-level PDL 规则已版本化，seed、nested property、count rounding、source-order policy 与 metadata 规则已明确，reference vectors 与独立验证脚本已通过。本阶段未生成 `PDL = 0.2 / 0.4 / 0.6 / 0.8` 的真实 tile PLY，未生成 DRC、BIN、XML、asset catalog、Stage2Input、多帧或全序列资产；未运行 calibration 正式实验、导师脚本、旧播放器或 Draco 工具。
 
 阶段 1D 已完成 frame 1051、G128、40 个非空 tile 的五档 binary PLY 真实生成与完整验证。新 root `artifacts/pilot_1051_g128_tilelocal_pdl5_v1/` 覆盖 128 个 theoretical tile，其中 40 个非空 tile 各生成 `PDL = 0.2 / 0.4 / 0.6 / 0.8 / 1.0` 五个 binary little-endian PLY，88 个空 tile 不生成 PLY。`PDL = 1.0` 文件逐字节复制阶段 1A baseline，低 PDL 文件按阶段 1C sampling profile 生成并通过独立验证。本阶段未生成 DRC、BIN、XML、asset catalog、Stage2Input、多帧或全序列资产；未运行导师脚本、旧播放器、Draco 工具或 calibration 正式实验。
+
+阶段 1D.1 已完成 multi-PDL generator 的 staging publish retry 维护与 multi-PDL validator 的 root-level provenance 验证加固。本轮没有重新运行真实 multi-PDL 资产生成，没有重新采样，没有改写 PLY，没有修改 sampling profile、grid profile、现有 artifact schema 或阶段 1D 的研究语义。generator 现在仅对 staging -> final root 发布阶段的 transient `PermissionError` 做 20 次总尝试、0.25 秒间隔的有限重试；validator 现在额外覆盖 profile snapshots、manifest-level provenance hashes、baseline references 和 root-level aggregate summaries。
 
 ## 4. 已完成工作
 
@@ -40,6 +42,7 @@
 - 阶段 1B.1：已完成 README 文档导航与项目交接可读性维护。
 - 阶段 1C：已完成 tile-local low-PDL sampling profile 冻结、reference vectors 创建和 Python 参考验证脚本一致性验证。
 - 阶段 1D：已完成 frame 1051 五档 binary PLY pilot 资产生成与独立验证。
+- 阶段 1D.1：已完成 multi-PDL staging publish retry 单元测试与 root-level provenance validator 加固。
 
 ## 5. 当前已确认决策
 
@@ -107,6 +110,8 @@
 - 阶段 1D 生成结果：source vertex count 为 `765821`；128 个 theoretical tile 中 40 个非空、88 个空；生成 PLY 文件数为 `200`，其中低 PDL PLY 为 `160`，`PDL = 1.0` byte-exact baseline copy 为 `40`。
 - 阶段 1D 按 PDL 汇总的输出点数为：`0.2 -> 153148`、`0.4 -> 306313`、`0.6 -> 459477`、`0.8 -> 612642`、`1.0 -> 765821`。
 - 阶段 1D 验证命令已通过：`python scripts\validate_pilot_multquality_binary_tiles.py`。验证确认五档文件齐全、空 tile 无 PLY、`PDL = 1.0` 与 baseline 逐字节一致、低 PDL selected indices 与独立推导一致、nested property 成立、binary records 与 source records 完全一致、metadata 与实际文件一致。
+- 阶段 1D.1 新增 retry 单元测试：`tests/test_multquality_staging_publish_retry.py`，覆盖 transient `PermissionError` 后成功发布，以及 persistent `PermissionError` 20 次重试后失败并清理 staging 的场景。
+- 阶段 1D.1 加固 `scripts/validate_pilot_multquality_binary_tiles.py`，新增 profile snapshot、manifest provenance hash、baseline provenance reference 和 root-level aggregate summary 验证；该加固不改变已生成 artifact 的研究语义。
 - 导师脚本包路径：`E:\Miunaaaa\0-work\code\MENTOR_SCRIPT_PACKAGE_vv_preprocess`。该脚本包仅作为静态参考资产。
 
 ## 8. 不可越过的边界
