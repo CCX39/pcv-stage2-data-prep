@@ -1,12 +1,12 @@
 # Stage2 数据准备项目契约
 
-> 阶段 1B 更新：本阶段允许对既有 calibration 项目、旧质量资产与导师参考脚本进行只读采样语义追溯和 tile-local 适配分析；仍禁止生成新的低 PDL PLY、DRC、BIN、XML、asset catalog、Stage2Input 或批量帧资产。
+> 阶段 1C 更新：本阶段允许创建 tile-local low-PDL sampling profile、reference vectors 与独立验证脚本；仍禁止生成低 PDL PLY、DRC、BIN、XML、asset catalog、Stage2Input 或批量帧资产。
 
 ## 1. 项目目的与范围
 
 本仓库服务于 Work1 Stage2 的真实数据准备与资产元数据工作。Stage2 的目标是在 Stage1 给定 `Budget_total` 后，为每个空间 tile 选择离散质量档位；本仓库未来负责提供可追溯的 tile 级多质量候选资产、资产元数据和后续 pilot 所需证据。
 
-阶段 1B 允许对既有 calibration 项目、旧质量资产与导师参考脚本进行只读采样语义追溯和 tile-local 适配分析；仍禁止生成新的低 PDL PLY、DRC、BIN、XML、asset catalog、Stage2Input 或批量帧资产。
+阶段 1C 允许创建版本化 tile-local low-PDL sampling profile、synthetic reference vectors 与独立验证脚本，用于冻结后续 frame 1051 多质量 binary PLY 生成规则；仍禁止生成低 PDL PLY、DRC、BIN、XML、asset catalog、Stage2Input 或批量帧资产。
 
 ## 2. 当前已确认的数据准备方向
 
@@ -20,6 +20,11 @@
 - DRC 必须由对应质量档位的 binary PLY 生成。
 - 理论 grid universe 中某帧为空的 tile 不生成实际 binary PLY 文件，也不生成实际 DRC 文件。
 - 阶段 1A 只生成 frame 1051 非空 tile 的 `PDL = 1.0` binary little-endian PLY baseline。
+- 阶段 1C 冻结 `longdress_1051_g128_tilelocal_pdl5_v1` sampling profile：低 PDL 采用 tile-local deterministic seeded permutation prefix sampling。
+- base seed 固定为 `20260530`，seed identity 字段为 `sampling_profile_id`、`dataset_id`、`frame_id`、`grid_profile_id`、`tile_id`；`target_pdl` / `quality_level` 不参与 seed identity。
+- `p < 1.0` 时目标点数为 `max(1, floor(N*p))`，`p = 1.0` 时使用全部 `N` 点。
+- 同一 tile 内必须满足 nested property，并按 source index 升序输出。
+- metadata 必须同时记录 `target_pdl` 与 `actual_retained_ratio`。
 
 ### 当前方向但未冻结细节
 
@@ -31,7 +36,6 @@
 ### 尚未决定
 
 - 最终网格维度 `Nx × Ny × Nz`、grid origin、全序列空间包络计算规则、cell size、边界归属规则、`tile_id` 编码格式和工作性 vertical axis。
-- 低 PDL 的具体采样算法、是否采用嵌套降采样、随机种子、确定性排序规则、点数取整规则，以及 PDL 记录目标比例还是实际保留比例。
 - Draco encoder 版本、命令或调用方式、geometry quantization、color quantization、compression level、误差容忍规则和 DRC 解码验证规则。
 - 新 XML 的具体字段、目录模板、资源路径规则和播放器兼容条件。
 
@@ -85,6 +89,12 @@ asset_status = not_generated_empty
 - `PDL = 1.0` 表示完整原始点集。
 - 新中间资产采用 binary little-endian tile PLY。
 - DRC 由对应质量档位的 binary PLY 生成。
+- 低 PDL 采用 tile-local deterministic seeded permutation prefix sampling。
+- 同一非空 tile 内不同 PDL 共享同一个 derived quality seed 与 Fisher-Yates permutation。
+- `target_pdl` / `quality_level` 不进入 seed identity。
+- `p < 1.0` 使用 `max(1, floor(N*p))`；`p = 1.0` 使用全部 `N` 点。
+- 输出点记录按 source tile PLY 的相对顺序写出。
+- metadata 必须同时记录 `target_pdl` 和 `actual_retained_ratio`。
 
 ### 当前方向但未冻结细节
 
@@ -93,7 +103,6 @@ asset_status = not_generated_empty
 
 ### 尚未决定
 
-- 低 PDL 采样算法、嵌套关系、随机性与确定性规则。
 - Draco 参数、版本、量化误差和验证规则。
 - `d_ms` 是真实 benchmark、derived estimate 还是 proxy。
 
@@ -146,12 +155,12 @@ Stage2Input JSON
 
 1. 最终 tile grid 维度、origin、空间包络、cell size、边界归属和 `tile_id` 编码。
 2. 工作性 vertical axis 与 Longdress 坐标尺度解释。
-3. 低 PDL 采样算法、嵌套降采样、随机种子、确定性排序和点数取整。
-4. Draco encoder 版本、调用方式、量化参数、压缩等级和解码验证。
-5. asset catalog、player manifest XML 与 Stage2Input 的具体字段和互相关联方式。
-6. 空 tile 是否进入 Stage2Input 或播放器 XML。
-7. `r_bytes`、`d_ms` 与相机相关字段的正式口径。
-8. 是否将阶段 1A 的 frame 1051 pilot profile 推广到后续少量帧验证或全序列实验资产。
+3. Draco encoder 版本、调用方式、量化参数、压缩等级和解码验证。
+4. asset catalog、player manifest XML 与 Stage2Input 的具体字段和互相关联方式。
+5. 空 tile 是否进入 Stage2Input 或播放器 XML。
+6. `r_bytes`、`d_ms` 与相机相关字段的正式口径。
+7. 是否将阶段 1A 的 frame 1051 pilot profile 推广到后续少量帧验证或全序列实验资产。
+8. tile-local low-PDL 资产生成后的可视化加载 sanity check 范围。
 
 ## 10. 文档维护规则
 

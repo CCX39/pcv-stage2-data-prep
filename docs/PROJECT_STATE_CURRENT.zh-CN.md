@@ -16,13 +16,15 @@
 
 ## 3. 当前阶段
 
-阶段 1B.1：README 文档导航完善与项目交接可读性检查
+阶段 1C：tile-local 低 PDL 采样契约冻结与参考实现一致性验证
 
 阶段 1A 已完成并验证 frame 1051 的 `PDL = 1.0` binary PLY baseline。
 
-阶段 1B 已完成低 PDL 采样语义追溯与 tile-local 适配分析，但尚未生成 `PDL = 0.2 / 0.4 / 0.6 / 0.8` 资产。本轮未生成 Draco DRC、BIN、XML、player manifest、正式 asset catalog、Stage2Input 或批量帧资产；未运行旧播放器、导师脚本、Draco 工具或 calibration 正式实验。
+阶段 1B 已完成低 PDL 采样语义追溯与 tile-local 适配分析。
 
-阶段 1B.1 已完成 README 文档导航与交接可读性维护。README 现作为仓库根目录的项目入口，集中说明项目定位、当前状态、推荐阅读顺序、文档职责、本地资产目录边界与 Git 协作方式。本轮没有新增、修改或冻结任何研究决策；`D1B-1` 仍为 `PENDING_USER_DECISION`。
+阶段 1B.1 已完成 README 文档导航与交接可读性维护。README 现作为仓库根目录的项目入口，集中说明项目定位、当前状态、推荐阅读顺序、文档职责、本地资产目录边界与 Git 协作方式。该阶段本身没有新增、修改或冻结任何研究决策；其后阶段 1C 已将 low-PDL 采样规则冻结为 D1C-1 至 D1C-5。
+
+阶段 1C 已完成 tile-local low-PDL sampling profile 冻结与参考实现一致性验证：five-level PDL 规则已版本化，seed、nested property、count rounding、source-order policy 与 metadata 规则已明确，reference vectors 与独立验证脚本已通过。本阶段未生成 `PDL = 0.2 / 0.4 / 0.6 / 0.8` 的真实 tile PLY，未生成 DRC、BIN、XML、asset catalog、Stage2Input、多帧或全序列资产；未运行 calibration 正式实验、导师脚本、旧播放器或 Draco 工具。
 
 ## 4. 已完成工作
 
@@ -34,6 +36,7 @@
 - 阶段 1A：已完成 frame 1051 fixed-grid `PDL = 1.0` binary PLY baseline 生成与独立验证。
 - 阶段 1B：已完成低 PDL 采样语义追溯、旧质量资产有限检查和 tile-local / frame-global 适配分析。
 - 阶段 1B.1：已完成 README 文档导航与项目交接可读性维护。
+- 阶段 1C：已完成 tile-local low-PDL sampling profile 冻结、reference vectors 创建和 Python 参考验证脚本一致性验证。
 
 ## 5. 当前已确认决策
 
@@ -45,7 +48,13 @@
 - 上述 profile 只冻结 frame 1051 pilot 真实资产生成规则，不等于全序列最终实验 grid、官方世界坐标或物理米制网格。
 - 新项目保留五个 PDL 档位：`{0.2, 0.4, 0.6, 0.8, 1.0}`，其中 `PDL = 1.0` 为完整原始点集。
 - 阶段 1A 只生成 frame 1051 非空 tile 的 `PDL = 1.0` binary little-endian PLY baseline。
-- calibration 正式低质量渲染使用 seeded nested prefix sampling；这是 full-cloud rendering evidence，不是 tile-level isolated calibration。
+- `longdress_1051_g128_tilelocal_pdl5_v1` 已冻结为 frame 1051 G128 pilot 的 tile-local low-PDL sampling profile。
+- 低 PDL 采用 tile-local deterministic seeded permutation prefix sampling。
+- base seed 固定为 `20260530`；seed identity 字段为 `sampling_profile_id`、`dataset_id`、`frame_id`、`grid_profile_id`、`tile_id`，`target_pdl` / `quality_level` 不参与 seed identity。
+- `p < 1.0` 时 retained point count 为 `max(1, floor(N*p))`；`p = 1.0` 时使用全部 `N` 点。
+- 同一 tile 内必须满足 `0.2 subset 0.4 subset 0.6 subset 0.8 subset 1.0`，输出点记录按 source tile PLY 相对顺序写出。
+- metadata 必须同时记录 `target_pdl` 与 `actual_retained_ratio`。
+- calibration 正式低质量渲染使用 seeded nested prefix sampling；这是 full-cloud rendering evidence，不是 tile-level isolated calibration。阶段 1C 的 tile-local profile 是该采样规则的 derived adaptation。
 - 新中间点云资产只使用 binary little-endian PLY。
 - DRC 必须由对应质量档位的 binary PLY 生成。
 - 空 tile 不生成实际 binary PLY 或 DRC，但必须在元数据中记录空 tile 状态。
@@ -56,11 +65,11 @@
 
 - 是否将 `longdress_raw_g128_fullseq_pilot_v1` 推广为后续少量帧或全序列实验 grid。
 - 工作性 vertical axis 与 Longdress 坐标尺度解释。
-- 低 PDL 最终采样作用域、嵌套策略、随机性或稳定排序策略、seed 派生规则和目标点数取整规则。
 - Draco encoder 版本、调用方式、几何量化、颜色量化、compression level、误差容忍和解码验证规则。
 - 空 tile 是否进入 Stage2Input 或播放器 XML，以及路径字段表达方式。
 - asset catalog / asset metadata、player manifest XML 与 Stage2Input JSON 的具体字段和关联规则。
 - `r_bytes`、`d_ms`、visibility、screen_area、distance_norm 等字段的正式 provenance 和生成规则。
+- 是否将 frame 1051 tile-local sampling profile 推广到后续少量帧或全序列实验。
 
 ## 7. 已有资产与关键证据
 
@@ -83,11 +92,15 @@
 - 阶段 1B 追溯 `pcv-distance-quality-calibration`：正式 run 使用 `buildNestedQualityGeometry` 对完整 PLY geometry 做 seeded permutation prefix sampling；低质量点数规则为 `Math.max(1, Math.floor(sourcePointCount * qualityLevel))`。
 - 阶段 1B 对旧 `GOF_1/A3_ply_binary/frame_0/cell_0` 质量组做有限只读检查：`R2_0.8` 是 `R1` 子集，但 `R3_0.6` 不是 `R2_0.8` 子集，`R4_0.4` 不是 `R3_0.6` 子集；旧质量资产不能用来冻结新 pipeline 的嵌套 PDL 语义。
 - 阶段 1B.1 已将 `README.md` 更新为仓库根目录导航入口，覆盖项目定位、当前状态、推荐阅读顺序、文档职责、代码与本地资产边界、关键语义边界和 Git 协作规则。
+- 阶段 1C 新增 sampling profile：`configs/pilot_sampling_profile.longdress_1051_g128_tilelocal_pdl5_v1.json`。
+- 阶段 1C 新增参考验证脚本：`scripts/validate_tilelocal_sampling_reference.py`。
+- 阶段 1C 新增 synthetic reference vectors：`tests/fixtures/tilelocal_sampling_reference_vectors.json`，不包含真实 PLY 数据或视觉质量证据。
+- 阶段 1C 验证命令已通过：`python scripts\validate_tilelocal_sampling_reference.py --sampling-profile "configs\pilot_sampling_profile.longdress_1051_g128_tilelocal_pdl5_v1.json" --reference-vectors "tests\fixtures\tilelocal_sampling_reference_vectors.json"`。
 - 导师脚本包路径：`E:\Miunaaaa\0-work\code\MENTOR_SCRIPT_PACKAGE_vv_preprocess`。该脚本包仅作为静态参考资产。
 
 ## 8. 不可越过的边界
 
-- 不生成低 PDL 质量版本，直到研究者冻结采样作用域、嵌套、seed 与取整规则。
+- 不生成低 PDL 质量版本，直到进入下一阶段并使用阶段 1C 冻结的 sampling profile、独立 artifact root 和验证规则。
 - 不生成 DRC、BIN、XML、player manifest、正式 asset catalog 或 Stage2Input。
 - 不生成其他 frame 或全序列资产，直到研究者确认下一阶段范围。
 - 不运行导师脚本、旧播放器、Draco encoder 或 decoder。
@@ -100,11 +113,7 @@
 
 ## 9. 下一阶段建议
 
-下一步仍应由研究者审阅 `docs/PDL_SAMPLING_AUDIT.zh-CN.md`，确认 low-PDL 的 sampling scope、nested property、seed derivation、target point-count rounding，以及 target PDL 与 actual retained ratio 的记录方式。
-
-当前必须由研究者确认：低 PDL 最终采样作用域、嵌套策略、随机性或稳定排序策略、目标点数取整规则，以及小 tile 的保底与 actual ratio 记录方式。在研究者确认前，不得生成 `PDL = 0.2 / 0.4 / 0.6 / 0.8` 的 tile PLY。
-
-研究者确认采样契约后，下一阶段才应仅对 frame 1051 的非空 tile 生成多质量 binary PLY，并独立验证 nested property、点数比例和属性保真。
+下一阶段建议仅对 frame 1051 的 40 个非空 tile，在新的、独立的 artifact root 中生成 `PDL = 0.2 / 0.4 / 0.6 / 0.8 / 1.0` five-level binary PLY，并验证 nested property、点数、属性保真、source-order policy 和 metadata。
 
 下一阶段仍不应直接批量生成全序列资产、直接生成 DRC、直接生成 XML 或直接生成 Stage2Input。
 

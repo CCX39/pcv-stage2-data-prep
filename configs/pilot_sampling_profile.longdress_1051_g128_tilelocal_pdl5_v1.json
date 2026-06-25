@@ -1,0 +1,124 @@
+{
+  "sampling_profile_id": "longdress_1051_g128_tilelocal_pdl5_v1",
+  "profile_scope": {
+    "confirmed_for": "frame 1051, G128 pilot grid, non-empty tile five-level PDL binary PLY asset generation",
+    "not_equivalent_to": [
+      "final full-sequence sampling profile",
+      "tile-level calibrated visual quality evidence",
+      "Draco profile",
+      "Stage2Input schema",
+      "player manifest schema"
+    ]
+  },
+  "dataset_id": "8i_longdress",
+  "frame_id": 1051,
+  "grid_profile_id": "longdress_raw_g128_fullseq_pilot_v1",
+  "sampling_scope": "tile_local",
+  "quality_levels": [0.2, 0.4, 0.6, 0.8, 1.0],
+  "baseline_quality_level": 1.0,
+  "sampling_method": "deterministic_seeded_permutation_prefix_sampling",
+  "permutation_algorithm": {
+    "name": "Fisher_Yates",
+    "iteration_order": "descending_from_count_minus_1_to_1",
+    "swap_index_rule": "floor(random() * (index + 1))",
+    "rng": "calibration_compatible_seeded_rng"
+  },
+  "selection_rule": "same_permutation_prefix_then_source_index_ascending",
+  "source_order_policy": "preserve_pdl_1_0_tile_source_relative_order",
+  "nested_property": "required_within_same_tile",
+  "base_seed": 20260530,
+  "seed_derivation_model": {
+    "name": "calibration_seedForSource_semantics_with_tile_identity",
+    "status": "derived_adaptation",
+    "identity_encoding": "UTF-8",
+    "initial_hash": "base_seed interpreted as unsigned 32-bit integer",
+    "per_identity_byte_update": "hash = ((hash XOR byte) * 16777619) mod 2^32",
+    "derived_quality_seed": "final hash as unsigned 32-bit integer",
+    "calibration_difference": "calibration uses source PLY relative path as source identity; this profile uses stable tile identity fields"
+  },
+  "seed_identity_fields": [
+    "sampling_profile_id",
+    "dataset_id",
+    "frame_id",
+    "grid_profile_id",
+    "tile_id"
+  ],
+  "seed_identity_template": "sampling_profile_id={sampling_profile_id}|dataset_id={dataset_id}|frame_id={frame_id}|grid_profile_id={grid_profile_id}|tile_id={tile_id}",
+  "seed_identity_canonicalization": {
+    "field_order": [
+      "sampling_profile_id",
+      "dataset_id",
+      "frame_id",
+      "grid_profile_id",
+      "tile_id"
+    ],
+    "separator": "|",
+    "key_value_separator": "=",
+    "encoding": "UTF-8",
+    "allow_spaces": false,
+    "case_policy": "values_are_used_exactly_as_recorded_in_profile_or_tile_metadata",
+    "forbidden_identity_fields": [
+      "target_pdl",
+      "quality_level",
+      "output_file_name",
+      "generation_timestamp",
+      "absolute_local_path",
+      "random_uuid"
+    ]
+  },
+  "seed_excludes_quality_level": true,
+  "target_count_rule": {
+    "p_less_than_1": "max(1, floor(N * p))",
+    "p_equal_1": "N",
+    "N_definition": "PDL=1.0 source point count for the non-empty tile"
+  },
+  "minimum_retained_point_rule": "for p < 1.0, retain at least 1 point for every non-empty tile",
+  "pdl_1_0_rule": "use all N source points without sampling, shuffling, reordering, deduplication, quantization, or coordinate transformation",
+  "required_metadata_fields": [
+    "sampling_profile_id",
+    "sampling_scope",
+    "dataset_id",
+    "frame_id",
+    "grid_profile_id",
+    "tile_id",
+    "target_pdl",
+    "source_point_count",
+    "retained_point_count",
+    "actual_retained_ratio",
+    "base_seed",
+    "seed_identity",
+    "derived_quality_seed",
+    "sampling_method",
+    "permutation_algorithm",
+    "source_order_policy",
+    "nested_group_id",
+    "provenance"
+  ],
+  "provenance": {
+    "classification": "derived_adaptation_of_calibration_sampling_rule",
+    "calibrated_evidence_boundary": "existing calibrated evidence comes from full-cloud Longdress rendering, not isolated tile calibration",
+    "tile_local_assets_claim": "tile-local low-PDL assets inherit sampling algorithm semantics only"
+  },
+  "calibration_reference": {
+    "repo": "E:\\Miunaaaa\\0-work\\code\\pcv-distance-quality-calibration",
+    "files": [
+      "src/web/renderer/nested-quality.js",
+      "src/shared/utils/seeded-rng.mjs",
+      "scripts/render_screenshots/index.mjs"
+    ],
+    "observed_semantics": [
+      "quality level 1.0 returns the full source geometry",
+      "p < 1.0 uses max(1, floor(sourcePointCount * qualityLevel))",
+      "one seeded Fisher-Yates permutation is shared for a source geometry and seed",
+      "selected permutation prefix indices are sorted ascending before output",
+      "seedForSource mixes a base seed with a stable source identity"
+    ]
+  },
+  "non_claims": [
+    "does not generate low-PDL PLY assets by itself",
+    "does not define Draco parameters",
+    "does not define XML or Stage2Input schema",
+    "does not claim tile-level calibrated visual quality evidence",
+    "does not treat point count, file size, or retained ratio as decoder latency or network overhead"
+  ]
+}

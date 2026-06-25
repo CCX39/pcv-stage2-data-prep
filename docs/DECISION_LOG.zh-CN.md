@@ -13,7 +13,12 @@
 | D0D-1 | G128 single-frame pilot provisional grid profile | RESOLVED_USER_CONFIRMED | `G128 = 4 x 8 x 4` 仅作为 Longdress frame 1051 单帧 pilot 的 provisional grid profile。 |
 | D1A-1 | frame 1051 pilot fixed raw-coordinate grid profile | RESOLVED_USER_CONFIRMED | `longdress_raw_g128_fullseq_pilot_v1` 已冻结为 frame 1051 pilot 的真实资产生成 profile。 |
 | D1A-2 | frame 1051 PDL=1.0 binary PLY baseline asset scope | RESOLVED_USER_CONFIRMED | 阶段 1A 只生成 frame 1051 非空 tile 的 `PDL = 1.0` binary PLY baseline。 |
-| D1B-1 | low-PDL sampling traceability and pending selection | PENDING_USER_DECISION | 已追溯 low-PDL 采样证据，但最终采样作用域、嵌套、seed 与取整规则仍待研究者确认。 |
+| D1B-1 | low-PDL sampling traceability and pending selection | SUPERSEDED_BY_D1C | 阶段 1B 完成采样追溯；最终规则已由 D1C-1 到 D1C-5 冻结。 |
+| D1C-1 | tile-local low-PDL sampling scope | RESOLVED_USER_CONFIRMED | 正式 low-PDL 资产生成采用 tile-local sampling，不采用 frame-global sampling 后再切块作为默认路径。 |
+| D1C-2 | seeded nested permutation prefix sampling | RESOLVED_USER_CONFIRMED | 同一 tile 内使用同一 seeded Fisher-Yates permutation，不同 PDL 使用不同长度前缀并保持嵌套。 |
+| D1C-3 | tile identity based seed derivation | RESOLVED_USER_CONFIRMED | base seed 为 `20260530`，seed identity 由 sampling profile、dataset、frame、grid profile 与 tile id 派生；PDL 不参与。 |
+| D1C-4 | target point count and source-order rule | RESOLVED_USER_CONFIRMED | `p<1` 使用 `max(1, floor(N*p))`，`p=1` 使用全部 N 点，输出按 source index 升序。 |
+| D1C-5 | target PDL and actual retained ratio metadata rule | RESOLVED_USER_CONFIRMED | metadata 必须同时记录 `target_pdl` 与 `actual_retained_ratio`。 |
 
 ## D0B-1 pilot source frame
 
@@ -140,10 +145,65 @@
 
 - 决策编号：D1B-1
 - 主题：低 PDL 采样语义追溯与待决选择
-- 状态：PENDING_USER_DECISION
+- 状态：SUPERSEDED_BY_D1C
 - 背景：阶段 1A 已完成 frame 1051 的 `PDL = 1.0` binary PLY baseline；进入低 PDL 资产生成前，需要追溯既有 `pcv-distance-quality-calibration` 中 `PDL = {0.2, 0.4, 0.6, 0.8}` 的真实采样语义，并判断其是否适合迁移到 tile-local pipeline。
 - 已获得的 calibration / legacy evidence：calibration 正式渲染路径使用 `buildNestedQualityGeometry`，对完整 PLY 的 Three.js geometry 使用 seeded permutation prefix sampling；点数规则为 `Math.max(1, Math.floor(sourcePointCount * qualityLevel))`；配置 seed 为 `20260530`，实际 `quality_seed` 由 source path 派生；正式 run 是 full-cloud rendering evidence，不是 isolated tile calibration。旧 A3 binary 质量组点数比例接近 `0.8/0.6/0.4`，但有限内容检查未支持逐级嵌套。
-- 尚未由研究者确认的最终采样规则：是否采用 tile-local 或 frame-global；是否强制 nested property；seed 如何由 frame/tile/profile 派生；小 tile 是否使用 `max(1, floor(N * p))`；是否同时记录 target PDL 与 actual retained ratio。
+- 后续状态：阶段 1C 已由研究者确认最终 low-PDL 采样规则；本条作为阶段 1B 追溯记录保留，实际执行以 D1C-1 至 D1C-5 为准。
 - tile-local 与 frame-global 的取舍：tile-local 更适合 Stage2 的 tile-level independent candidate semantics，但属于 calibration 采样规则的 derived adaptation；frame-global 更接近 calibration 的 full-cloud scope，但每个 tile 的实际保留比例可能偏离目标 PDL。
-- 对后续实现的影响：下一阶段在研究者确认前不得直接生成 `PDL = 0.2 / 0.4 / 0.6 / 0.8` 资产；确认后应只对 frame 1051 非空 tile 生成多质量 binary PLY，并独立验证 nested property、点数比例和属性保真。
+- 对后续实现的影响：后续实现不得回到 D1B 的待决状态；必须按 D1C 冻结规则创建多质量 binary PLY，并独立验证 nested property、点数比例和属性保真。
 - 对论文或实验表述的影响：可以将既有 calibration 表述为 full-cloud distance-quality calibrated evidence；tile-local 低 PDL 资产若采用同类算法，只能表述为 derived adaptation，不能写成 tile-level calibrated PDL。
+
+## D1C-1 tile-local low-PDL sampling scope
+
+- 决策编号：D1C-1
+- 主题：tile-local low-PDL 采样作用域
+- 状态：RESOLVED_USER_CONFIRMED
+- 背景：阶段 1B 比较了 frame-global sampling 后再切块与 tile-local sampling。Stage2 将 tile 视为独立质量候选对象，因此需要让每个非空 tile 的低 PDL 候选具有清晰的 tile-local 语义。
+- 已确认内容：正式 low-PDL 资产生成采用 `tile-local sampling`。每个非空 tile 的 `PDL = 1.0` binary PLY 是该 tile 的 source point set，`PDL = 0.2 / 0.4 / 0.6 / 0.8` 均在 tile 内独立生成。不采用 frame-global sampling 后再切块作为当前默认正式路径。
+- 未确认边界：未来可将 frame-global sampling 作为额外对照或敏感性分析，但不属于当前正式 pipeline；是否推广到多帧或全序列仍待后续阶段确认。
+- 对实现的影响：下一阶段的多质量 PLY 生成脚本必须以每个非空 tile 的 `PDL = 1.0` PLY 为输入单位，不得先对完整 frame 采样再切块。
+- 对论文与实验表述的影响：tile-local 低 PDL 资产是 calibration sampling rule 的 tile-local derived adaptation，不是 tile-level calibrated quality evidence。
+
+## D1C-2 seeded nested permutation prefix sampling
+
+- 决策编号：D1C-2
+- 主题：seeded nested permutation prefix sampling
+- 状态：RESOLVED_USER_CONFIRMED
+- 背景：calibration 正式渲染路径使用 seeded Fisher-Yates permutation，并对不同 quality level 使用同一 permutation 的不同长度前缀。该语义可迁移为 tile-local 采样规则。
+- 已确认内容：同一非空 tile 内，对 `PDL = 1.0` source point index 生成一次确定性 Fisher-Yates permutation；低 PDL 使用该 permutation 的不同长度前缀；选中的 source indices 在写出前按升序排序。必须满足 `0.2 subset 0.4 subset 0.6 subset 0.8 subset 1.0`。
+- 未确认边界：本决策不生成真实 PLY，也不验证视觉质量；未来实现仍需验证二进制 PLY 属性保真。
+- 对实现的影响：不得为不同 PDL 独立重新 shuffle；同一 tile 的所有低 PDL 必须共享一个 permutation。
+- 对论文与实验表述的影响：可表述为确定性嵌套采样规则已冻结；不能表述为完成 tile-level visual calibration。
+
+## D1C-3 tile identity based seed derivation
+
+- 决策编号：D1C-3
+- 主题：基于 tile identity 的 seed 派生规则
+- 状态：RESOLVED_USER_CONFIRMED
+- 背景：calibration 的 `seedForSource` 使用 base seed 与完整 PLY 相对路径派生 quality seed。当前 pipeline 的 source unit 改为 tile，因此需要稳定 tile identity。
+- 已确认内容：base seed 固定为 `20260530`。每个非空 tile 的 permutation seed 由 `sampling_profile_id`、`dataset_id`、`frame_id`、`grid_profile_id`、`tile_id` 派生。`target_pdl` / `quality_level` 不参与 seed identity 或 seed derivation。
+- 未确认边界：新 tile seed 不要求、也不得声称与 calibration 中完整 frame PLY 的 `quality_seed` 数值相同。
+- 对实现的影响：同一 tile 的所有 PDL 必须共享同一个 derived quality seed；seed identity 不能包含 PDL、输出文件名、生成时间戳、绝对本地路径或随机 UUID。
+- 对论文与实验表述的影响：应表述为 derived adaptation of calibration seedForSource semantics，而不是直接复用 full-cloud source path seed。
+
+## D1C-4 target point count and source-order rule
+
+- 决策编号：D1C-4
+- 主题：目标点数与 source-order 输出规则
+- 状态：RESOLVED_USER_CONFIRMED
+- 背景：阶段 1B 已确认 calibration 使用 `Math.max(1, Math.floor(sourcePointCount * qualityLevel))`，且 selected indices 在输出前升序排序。
+- 已确认内容：对非空 tile，`p < 1.0` 时 `n_p = max(1, floor(N*p))`；`p = 1.0` 时 `n_p = N`。输出点记录必须按 source tile PLY 的相对顺序写出，即 selected source indices 升序。
+- 未确认边界：本决策不定义坐标、颜色属性写出实现，也不定义 DRC 或 XML。
+- 对实现的影响：不得按三维坐标排序、不得按颜色排序、不得按 permutation 顺序写出、不得在输出时随机重排。
+- 对论文与实验表述的影响：可说明 target PDL 是目标比例；小 tile 因最小保底可能产生高于目标的 actual ratio。
+
+## D1C-5 target PDL and actual retained ratio metadata rule
+
+- 决策编号：D1C-5
+- 主题：target PDL 与 actual retained ratio metadata 规则
+- 状态：RESOLVED_USER_CONFIRMED
+- 背景：小 tile 使用 `max(1, floor(N*p))` 时，实际保留比例可能不等于 target PDL，需要在 metadata 中避免歧义。
+- 已确认内容：未来每个非空 tile、每个 PDL 的 metadata 必须至少记录 `sampling_profile_id`、`sampling_scope`、`dataset_id`、`frame_id`、`grid_profile_id`、`tile_id`、`target_pdl`、`source_point_count`、`retained_point_count`、`actual_retained_ratio`、`base_seed`、`seed_identity`、`derived_quality_seed`、`sampling_method`、`permutation_algorithm`、`source_order_policy`、`nested_group_id` 和 `provenance`。必须同时记录 `target_pdl` 与 `actual_retained_ratio`。
+- 未确认边界：正式 asset catalog schema 与 Stage2Input 字段仍未冻结。
+- 对实现的影响：metadata 不得只记录 PDL 标签；若实际比例高于 target PDL，必须如实记录。
+- 对论文与实验表述的影响：`actual_retained_ratio` 是 derived ratio，不是 decoder latency、端到端网络开销或 tile-level 主观质量阈值。

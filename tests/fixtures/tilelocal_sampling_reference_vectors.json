@@ -1,0 +1,145 @@
+{
+  "fixture_id": "tilelocal_sampling_reference_vectors_v1",
+  "source": {
+    "generation_method": "Directly imported calibration src/shared/utils/seeded-rng.mjs shuffledIndices; seed identity derivation transcribed from scripts/render_screenshots/index.mjs seedForSource semantics using UTF-8 bytes. No formal calibration experiment was run.",
+    "contains_real_ply_data": false,
+    "contains_visual_quality_evidence": false
+  },
+  "vectors": [
+    {
+      "case_id": "small_tile_min_retention_N2",
+      "sampling_profile_id": "longdress_1051_g128_tilelocal_pdl5_v1",
+      "dataset_id": "8i_longdress",
+      "frame_id": 1051,
+      "grid_profile_id": "longdress_raw_g128_fullseq_pilot_v1",
+      "tile_id": "gx_0_gy_0_gz_0",
+      "source_point_count": 2,
+      "base_seed": 20260530,
+      "seed_identity": "sampling_profile_id=longdress_1051_g128_tilelocal_pdl5_v1|dataset_id=8i_longdress|frame_id=1051|grid_profile_id=longdress_raw_g128_fullseq_pilot_v1|tile_id=gx_0_gy_0_gz_0",
+      "expected_derived_quality_seed": 2039635627,
+      "expected_retained_point_counts": {
+        "0.2": 1,
+        "0.4": 1,
+        "0.6": 1,
+        "0.8": 1,
+        "1.0": 2
+      },
+      "expected_selected_source_indices_by_pdl": {
+        "0.2": [1],
+        "0.4": [1],
+        "0.6": [1],
+        "0.8": [1],
+        "1.0": [0, 1]
+      },
+      "expected_actual_retained_ratios": {
+        "0.2": 0.5,
+        "0.4": 0.5,
+        "0.6": 0.5,
+        "0.8": 0.5,
+        "1.0": 1
+      }
+    },
+    {
+      "case_id": "non_integer_ratio_tile_N17",
+      "sampling_profile_id": "longdress_1051_g128_tilelocal_pdl5_v1",
+      "dataset_id": "8i_longdress",
+      "frame_id": 1051,
+      "grid_profile_id": "longdress_raw_g128_fullseq_pilot_v1",
+      "tile_id": "gx_1_gy_2_gz_0",
+      "source_point_count": 17,
+      "base_seed": 20260530,
+      "seed_identity": "sampling_profile_id=longdress_1051_g128_tilelocal_pdl5_v1|dataset_id=8i_longdress|frame_id=1051|grid_profile_id=longdress_raw_g128_fullseq_pilot_v1|tile_id=gx_1_gy_2_gz_0",
+      "expected_derived_quality_seed": 1448106842,
+      "expected_retained_point_counts": {
+        "0.2": 3,
+        "0.4": 6,
+        "0.6": 10,
+        "0.8": 13,
+        "1.0": 17
+      },
+      "expected_selected_source_indices_by_pdl": {
+        "0.2": [0, 5, 9],
+        "0.4": [0, 5, 9, 11, 12, 15],
+        "0.6": [0, 2, 3, 5, 9, 11, 12, 13, 15, 16],
+        "0.8": [0, 2, 3, 4, 5, 7, 9, 11, 12, 13, 14, 15, 16],
+        "1.0": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+      },
+      "expected_actual_retained_ratios": {
+        "0.2": 0.176470588235,
+        "0.4": 0.352941176471,
+        "0.6": 0.588235294118,
+        "0.8": 0.764705882353,
+        "1.0": 1
+      }
+    },
+    {
+      "case_id": "larger_tile_permutation_N101",
+      "sampling_profile_id": "longdress_1051_g128_tilelocal_pdl5_v1",
+      "dataset_id": "8i_longdress",
+      "frame_id": 1051,
+      "grid_profile_id": "longdress_raw_g128_fullseq_pilot_v1",
+      "tile_id": "gx_2_gy_4_gz_1",
+      "source_point_count": 101,
+      "base_seed": 20260530,
+      "seed_identity": "sampling_profile_id=longdress_1051_g128_tilelocal_pdl5_v1|dataset_id=8i_longdress|frame_id=1051|grid_profile_id=longdress_raw_g128_fullseq_pilot_v1|tile_id=gx_2_gy_4_gz_1",
+      "expected_derived_quality_seed": 359065722,
+      "expected_retained_point_counts": {
+        "0.2": 20,
+        "0.4": 40,
+        "0.6": 60,
+        "0.8": 80,
+        "1.0": 101
+      },
+      "expected_selected_source_indices_by_pdl": {
+        "0.2": [
+          9, 16, 23, 30, 33, 37, 40, 42, 44, 47,
+          49, 58, 63, 69, 72, 74, 83, 89, 93, 96
+        ],
+        "0.4": [
+          5, 9, 13, 14, 16, 23, 30, 31, 33, 36,
+          37, 38, 40, 42, 44, 45, 46, 47, 49, 51,
+          55, 58, 60, 63, 64, 67, 68, 69, 70, 71,
+          72, 74, 75, 83, 88, 89, 93, 96, 98, 100
+        ],
+        "0.6": [
+          0, 1, 4, 5, 7, 9, 11, 13, 14, 16,
+          19, 23, 24, 27, 29, 30, 31, 32, 33, 36,
+          37, 38, 39, 40, 41, 42, 44, 45, 46, 47,
+          49, 50, 51, 53, 55, 58, 60, 63, 64, 66,
+          67, 68, 69, 70, 71, 72, 74, 75, 76, 81,
+          83, 84, 88, 89, 90, 93, 96, 97, 98, 100
+        ],
+        "0.8": [
+          0, 1, 4, 5, 6, 7, 8, 9, 10, 11,
+          13, 14, 15, 16, 18, 19, 22, 23, 24, 25,
+          26, 27, 29, 30, 31, 32, 33, 34, 36, 37,
+          38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+          49, 50, 51, 52, 53, 55, 58, 60, 62, 63,
+          64, 65, 66, 67, 68, 69, 70, 71, 72, 73,
+          74, 75, 76, 78, 80, 81, 82, 83, 84, 86,
+          88, 89, 90, 93, 95, 96, 97, 98, 99, 100
+        ],
+        "1.0": [
+          0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+          10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+          20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+          30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
+          40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+          50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
+          60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+          70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+          80, 81, 82, 83, 84, 85, 86, 87, 88, 89,
+          90, 91, 92, 93, 94, 95, 96, 97, 98, 99,
+          100
+        ]
+      },
+      "expected_actual_retained_ratios": {
+        "0.2": 0.19801980198,
+        "0.4": 0.39603960396,
+        "0.6": 0.594059405941,
+        "0.8": 0.792079207921,
+        "1.0": 1
+      }
+    }
+  ]
+}
