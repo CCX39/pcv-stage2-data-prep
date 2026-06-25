@@ -19,6 +19,7 @@
 | D1C-3 | tile identity based seed derivation | RESOLVED_USER_CONFIRMED | base seed 为 `20260530`，seed identity 由 sampling profile、dataset、frame、grid profile 与 tile id 派生；PDL 不参与。 |
 | D1C-4 | target point count and source-order rule | RESOLVED_USER_CONFIRMED | `p<1` 使用 `max(1, floor(N*p))`，`p=1` 使用全部 N 点，输出按 source index 升序。 |
 | D1C-5 | target PDL and actual retained ratio metadata rule | RESOLVED_USER_CONFIRMED | metadata 必须同时记录 `target_pdl` 与 `actual_retained_ratio`。 |
+| D1D-1 | multi-PDL root PDL=1.0 baseline copy policy | RESOLVED_USER_CONFIRMED | 阶段 1D multi-PDL root 中的 `PDL = 1.0` PLY 必须逐字节复制阶段 1A baseline。 |
 
 ## D0B-1 pilot source frame
 
@@ -207,3 +208,14 @@
 - 未确认边界：正式 asset catalog schema 与 Stage2Input 字段仍未冻结。
 - 对实现的影响：metadata 不得只记录 PDL 标签；若实际比例高于 target PDL，必须如实记录。
 - 对论文与实验表述的影响：`actual_retained_ratio` 是 derived ratio，不是 decoder latency、端到端网络开销或 tile-level 主观质量阈值。
+
+## D1D-1 multi-PDL root PDL=1.0 baseline copy policy
+
+- 决策编号：D1D-1
+- 主题：multi-PDL root 中 `PDL = 1.0` 的 baseline 逐字节复制策略
+- 状态：RESOLVED_USER_CONFIRMED
+- 背景：阶段 1A 已生成并独立验证 frame 1051、G128、40 个非空 tile 的 `PDL = 1.0` binary PLY baseline。阶段 1D 在新的 multi-PDL root 中生成五档 binary PLY 时，需要避免重新切块或重新序列化 `PDL = 1.0` 导致 provenance 与字节级可追溯性变复杂。
+- 已确认内容：阶段 1D 的 `artifacts/pilot_1051_g128_tilelocal_pdl5_v1/` 中，每个非空 tile 的 `pdl_1.0.ply` 必须逐字节复制阶段 1A baseline root 中对应 tile 的 `pdl_1.0.ply`。metadata 中必须记录 `provenance_kind = byte_exact_copy_of_stage1a_baseline`，并保留 baseline root、baseline tile identity 与 baseline SHA-256 等来源信息。
+- 未确认边界：本决策不冻结 Draco DRC 生成、XML schema、正式 asset catalog schema、Stage2Input 字段、多帧或全序列资产范围，也不改变 D1C-1 至 D1C-5 已冻结的低 PDL sampling semantics。
+- 对实现的影响：生成脚本不得从原始 ASCII PLY 重新生成 multi-PDL root 中的 `PDL = 1.0` 文件，不得重新序列化或改写其 header、record order、浮点表示或颜色值；验证脚本必须逐字节确认 multi-PDL root 的 `PDL = 1.0` 文件与 baseline 对应文件一致。
+- 对论文与实验表述的影响：可以将阶段 1D 的 `PDL = 1.0` 资产表述为阶段 1A baseline 的 byte-exact copy；低 PDL 资产仍是 calibration sampling rule 的 tile-local derived adaptation，不是 tile-level calibrated visual-quality evidence。该决策不意味着已经完成 DRC、播放器 XML、Stage2Input 或批量实验。

@@ -1,12 +1,12 @@
 # Stage2 数据准备项目契约
 
-> 阶段 1C 更新：本阶段允许创建 tile-local low-PDL sampling profile、reference vectors 与独立验证脚本；仍禁止生成低 PDL PLY、DRC、BIN、XML、asset catalog、Stage2Input 或批量帧资产。
+> 阶段 1D 更新：本阶段允许基于阶段 1A baseline 与阶段 1C sampling profile，生成 frame 1051、G128、40 个非空 tile 的五档 binary PLY pilot 资产并进行独立验证；仍禁止生成 DRC、BIN、XML、正式 asset catalog、Stage2Input 或批量帧资产。
 
 ## 1. 项目目的与范围
 
 本仓库服务于 Work1 Stage2 的真实数据准备与资产元数据工作。Stage2 的目标是在 Stage1 给定 `Budget_total` 后，为每个空间 tile 选择离散质量档位；本仓库未来负责提供可追溯的 tile 级多质量候选资产、资产元数据和后续 pilot 所需证据。
 
-阶段 1C 允许创建版本化 tile-local low-PDL sampling profile、synthetic reference vectors 与独立验证脚本，用于冻结后续 frame 1051 多质量 binary PLY 生成规则；仍禁止生成低 PDL PLY、DRC、BIN、XML、asset catalog、Stage2Input 或批量帧资产。
+阶段 1D 允许在 Git ignored 的独立 artifact root 中，针对 frame 1051、G128 和 40 个非空 tile 生成 `PDL = 0.2 / 0.4 / 0.6 / 0.8 / 1.0` 五档 binary PLY，并运行独立验证脚本。该阶段仍禁止生成 DRC、BIN、XML、正式 asset catalog、Stage2Input 或批量帧资产。
 
 ## 2. 当前已确认的数据准备方向
 
@@ -25,6 +25,7 @@
 - `p < 1.0` 时目标点数为 `max(1, floor(N*p))`，`p = 1.0` 时使用全部 `N` 点。
 - 同一 tile 内必须满足 nested property，并按 source index 升序输出。
 - metadata 必须同时记录 `target_pdl` 与 `actual_retained_ratio`。
+- 阶段 1D 的 multi-PDL pilot root 中，`PDL = 1.0` 必须逐字节复制阶段 1A baseline；低 PDL 资产是 calibration sampling rule 的 tile-local derived adaptation。
 
 ### 当前方向但未冻结细节
 
@@ -53,6 +54,8 @@
 原始 Longdress ASCII PLY 是外部输入资产，不进入 Git。新项目不为早期 ASCII tile PLY 路径建立兼容性或正式生成逻辑。
 
 旧资产只能作为历史参考或目录关系参考，不能自动视为新项目的正式实验资产。旧目录名中的 `0.8`、`0.6`、`0.4`、`qp`、`qc`、`cl` 等字符串不得直接写成已证实的 PDL 或 Draco 参数。
+
+阶段 1D 的五档 binary PLY pilot root 是真实文件级 pilot 资产集合，但不是正式 asset catalog，不是 Stage2Input，也不是播放器 XML 或 DRC 资产包。该 root 中的 file size 与 SHA-256 是 measured file records；点数、文件大小与实际保留比例不得写成 decoder latency、端到端网络开销或 tile-level visual quality threshold。
 
 ## 4. 空 tile 与跨帧 tile identity 原则
 
@@ -95,6 +98,7 @@ asset_status = not_generated_empty
 - `p < 1.0` 使用 `max(1, floor(N*p))`；`p = 1.0` 使用全部 `N` 点。
 - 输出点记录按 source tile PLY 的相对顺序写出。
 - metadata 必须同时记录 `target_pdl` 和 `actual_retained_ratio`。
+- 在阶段 1D multi-PDL root 中，`PDL = 1.0` 采用 `byte_exact_copy_of_stage1a_baseline` provenance；低 PDL 采用 `derived_adaptation_of_calibration_sampling_rule` provenance。
 
 ### 当前方向但未冻结细节
 
@@ -136,11 +140,12 @@ Stage2Input JSON
 
 旧资产和未来新资产必须区分 provenance 与生成 profile，不能把 proxy、derived 或 synthetic 数据写成 measured 数据。
 
+阶段 1D 的低 PDL tile-local 资产仅继承经过追溯并冻结的 sampling algorithm semantics；它们不是 tile-level calibrated visual-quality evidence。现有 calibrated evidence 仍来自完整 Longdress 点云的 full-cloud rendering 条件。
+
 ## 8. 当前明确不做的内容
 
 当前阶段不做以下工作：
 
-- 不生成 `PDL = 0.2 / 0.4 / 0.6 / 0.8` 质量版本。
 - 不生成 DRC、BIN、XML、player manifest、正式 asset catalog 或 Stage2Input。
 - 不生成其他 frame 或全序列资产。
 - 不运行导师脚本、旧播放器、Draco encoder 或 decoder。
