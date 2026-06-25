@@ -1,12 +1,12 @@
 # Stage2 数据准备项目契约
 
-> 阶段 1D 更新：本阶段允许基于阶段 1A baseline 与阶段 1C sampling profile，生成 frame 1051、G128、40 个非空 tile 的五档 binary PLY pilot 资产并进行独立验证；仍禁止生成 DRC、BIN、XML、正式 asset catalog、Stage2Input 或批量帧资产。
+> 阶段 2A 更新：本阶段不生成 DRC，只冻结当前数据准备侧的 composite DRC representation 语义、Draco pilot candidate family 与 Stage2 理论接口交接边界。
 
 ## 1. 项目目的与范围
 
 本仓库服务于 Work1 Stage2 的真实数据准备与资产元数据工作。Stage2 的目标是在 Stage1 给定 `Budget_total` 后，为每个空间 tile 选择离散质量档位；本仓库未来负责提供可追溯的 tile 级多质量候选资产、资产元数据和后续 pilot 所需证据。
 
-阶段 1D 允许在 Git ignored 的独立 artifact root 中，针对 frame 1051、G128 和 40 个非空 tile 生成 `PDL = 0.2 / 0.4 / 0.6 / 0.8 / 1.0` 五档 binary PLY，并运行独立验证脚本。该阶段仍禁止生成 DRC、BIN、XML、正式 asset catalog、Stage2Input 或批量帧资产。
+阶段 2A 仅进行文档与只读 CLI 事实确认，不执行 PLY -> DRC 编码、DRC -> PLY 解码、round-trip verification、DRC 文件大小测量、decode-cost benchmark、XML 生成、正式 asset catalog 生成、Stage2Input 生成或批量帧资产生成。
 
 ## 2. 当前已确认的数据准备方向
 
@@ -26,6 +26,9 @@
 - 同一 tile 内必须满足 nested property，并按 source index 升序输出。
 - metadata 必须同时记录 `target_pdl` 与 `actual_retained_ratio`。
 - 阶段 1D 的 multi-PDL pilot root 中，`PDL = 1.0` 必须逐字节复制阶段 1A baseline；低 PDL 资产是 calibration sampling rule 的 tile-local derived adaptation。
+- PDL 当前定位为 `source_pdl`，即 tile-local nested sampling 后的 source point-density axis；它不是最终 Stage2 delivery candidate 的唯一离散质量轴。
+- 后续 Stage2 delivery representation candidate 应记录为 composite representation variant，其逻辑 identity 至少包含 `dataset_id`、`frame_id`、`grid_profile_id`、`tile_id`、`source_pdl`、`codec_id = draco`、point-cloud mode、`cl`、`qc` 与 `qp`。
+- 当前第一版 DRC raw candidate family 为：`source_pdl ∈ {0.2,0.4,0.6,0.8,1.0}`、`codec = Draco`、point-cloud mode required、`cl = 10`、`qc = 6`、`qp ∈ {8,10,12}`。该 family 是研究者确认的 pilot candidate family，尚未完成实际编码、round-trip fidelity、R/D/Q evidence 或最优性验证。
 
 ### 当前方向但未冻结细节
 
@@ -56,6 +59,14 @@
 旧资产只能作为历史参考或目录关系参考，不能自动视为新项目的正式实验资产。旧目录名中的 `0.8`、`0.6`、`0.4`、`qp`、`qc`、`cl` 等字符串不得直接写成已证实的 PDL 或 Draco 参数。
 
 阶段 1D 的五档 binary PLY pilot root 是真实文件级 pilot 资产集合，但不是正式 asset catalog，不是 Stage2Input，也不是播放器 XML 或 DRC 资产包。该 root 中的 file size 与 SHA-256 是 measured file records；点数、文件大小与实际保留比例不得写成 decoder latency、端到端网络开销或 tile-level visual quality threshold。
+
+当前 delivery asset 路线为：
+
+```text
+binary PLY -> DRC
+```
+
+binary PLY 是 source asset、Draco encoding input、round-trip validation reference，也可作为 uncompressed experimental baseline；但不默认作为正常 Stage2 delivery candidate。DRC 是后续实际 delivery representation candidate。BIN 当前项目范围明确排除，不进行 PLY/DRC 的 BIN 二次打包；旧项目与导师脚本中的 BIN 流程仅为 historical static reference。
 
 ## 4. 空 tile 与跨帧 tile identity 原则
 
@@ -99,6 +110,7 @@ asset_status = not_generated_empty
 - 输出点记录按 source tile PLY 的相对顺序写出。
 - metadata 必须同时记录 `target_pdl` 和 `actual_retained_ratio`。
 - 在阶段 1D multi-PDL root 中，`PDL = 1.0` 采用 `byte_exact_copy_of_stage1a_baseline` provenance；低 PDL 采用 `derived_adaptation_of_calibration_sampling_rule` provenance。
+- 后续每个 DRC candidate 的 asset metadata 必须至少能追溯 `source_pdl`、codec、point-cloud mode、`cl`、`qc`、`qp`、source binary PLY、encoder executable 或 profile provenance。
 
 ### 当前方向但未冻结细节
 
@@ -126,6 +138,8 @@ Stage2Input JSON
 
 当前不冻结 XML tag/schema、目录模板或 Stage2Input 字段。新 XML 不应承担全部数据准备、provenance 与运行时 Stage2 决策输入三种职责。
 
+data-prep 不预先把 PLY-only distance lookup 当作 DRC candidate hard filter。DRC corpus 生成应保留完整 pilot candidate family，后续 solver-side 再决定 lookup projection、candidate filtering 与 Pareto pruning。
+
 ## 7. provenance 与术语边界
 
 本项目必须区分以下术语：
@@ -148,13 +162,14 @@ Stage2Input JSON
 
 - 不生成 DRC、BIN、XML、player manifest、正式 asset catalog 或 Stage2Input。
 - 不生成其他 frame 或全序列资产。
-- 不运行导师脚本、旧播放器、Draco encoder 或 decoder。
+- 不运行导师脚本、旧播放器或任何 Draco 实际编码/解码命令；无输入 help/version 审查只用于记录 CLI 事实。
 - 不把 frame 1051 pilot profile 写成官方世界坐标、物理米制网格、最优 grid 或最终全序列实验 grid。
 - 不冻结 Draco 参数。
 - 不冻结 XML tag/schema。
 - 不修改 `pcv-stage2-allocation` 或 `pcv-distance-quality-calibration`。
 - 不整体复用导师脚本包，不直接运行旧脚本。
 - 不创建英文版重复文档。
+- 不将 PLY-only distance lookup 直接写成 composite DRC variant hard cap。
 
 ## 9. 未冻结决策清单
 
@@ -166,6 +181,7 @@ Stage2Input JSON
 6. `r_bytes`、`d_ms` 与相机相关字段的正式口径。
 7. 是否将阶段 1A 的 frame 1051 pilot profile 推广到后续少量帧验证或全序列实验资产。
 8. tile-local low-PDL 资产生成后的可视化加载 sanity check 范围。
+9. composite DRC variants 的 `Q_base(i,v)`、`R(i,v)`、`D(i,v)` evidence 与 solver-side lookup projection / Pareto pruning 规则。
 
 ## 10. 文档维护规则
 

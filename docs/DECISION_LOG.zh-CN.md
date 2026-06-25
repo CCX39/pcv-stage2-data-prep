@@ -20,6 +20,7 @@
 | D1C-4 | target point count and source-order rule | RESOLVED_USER_CONFIRMED | `p<1` 使用 `max(1, floor(N*p))`，`p=1` 使用全部 N 点，输出按 source index 升序。 |
 | D1C-5 | target PDL and actual retained ratio metadata rule | RESOLVED_USER_CONFIRMED | metadata 必须同时记录 `target_pdl` 与 `actual_retained_ratio`。 |
 | D1D-1 | multi-PDL root PDL=1.0 baseline copy policy | RESOLVED_USER_CONFIRMED | 阶段 1D multi-PDL root 中的 `PDL = 1.0` PLY 必须逐字节复制阶段 1A baseline。 |
+| D2A-1 | composite DRC delivery candidate semantics | RESOLVED_USER_CONFIRMED | PDL 是 source point-density axis；后续 delivery candidate 为 source_pdl 与 Draco profile 组成的 composite representation variant，BIN 当前排除。 |
 
 ## D0B-1 pilot source frame
 
@@ -219,3 +220,14 @@
 - 未确认边界：本决策不冻结 Draco DRC 生成、XML schema、正式 asset catalog schema、Stage2Input 字段、多帧或全序列资产范围，也不改变 D1C-1 至 D1C-5 已冻结的低 PDL sampling semantics。
 - 对实现的影响：生成脚本不得从原始 ASCII PLY 重新生成 multi-PDL root 中的 `PDL = 1.0` 文件，不得重新序列化或改写其 header、record order、浮点表示或颜色值；验证脚本必须逐字节确认 multi-PDL root 的 `PDL = 1.0` 文件与 baseline 对应文件一致。
 - 对论文与实验表述的影响：可以将阶段 1D 的 `PDL = 1.0` 资产表述为阶段 1A baseline 的 byte-exact copy；低 PDL 资产仍是 calibration sampling rule 的 tile-local derived adaptation，不是 tile-level calibrated visual-quality evidence。该决策不意味着已经完成 DRC、播放器 XML、Stage2Input 或批量实验。
+
+## D2A-1 composite DRC delivery candidate semantics
+
+- 决策编号：D2A-1
+- 主题：Stage2 delivery representation candidate 的资产语义与当前编码范围
+- 状态：RESOLVED_USER_CONFIRMED
+- 背景：阶段 1D 已生成 frame 1051 的五档 binary PLY source assets，但这些 PLY 只是 source/reference/round-trip baseline，不应继续被表述为最终 Stage2 delivery quality candidate space。后续真实 delivery candidate 需要结合 source point-density 与 Draco codec profile。
+- 已确认内容：`PDL` 当前定位为 `source_pdl`，仅表示 tile-local nested sampling 后的 source point-density axis。后续 Stage2 delivery candidate 是 composite representation variant，其逻辑 identity 至少包含 `dataset_id`、`frame_id`、`grid_profile_id`、`tile_id`、`source_pdl`、`codec_id = draco`、point-cloud mode、`cl`、`qc` 与 `qp`。当前 pilot candidate family 为：`source_pdl ∈ {0.2,0.4,0.6,0.8,1.0}`、`codec = Draco`、point-cloud mode required、`cl = 10`、`qc = 6`、`qp ∈ {8,10,12}`。对每个非空 tile，后续预期 DRC candidate 数为 `5 × 3 = 15`；frame 1051 的 40 个非空 tile 对应后续完整 pilot corpus 预计为 `600` 个 DRC 文件。PLY 用于 source/reference/round-trip validation baseline；DRC 是后续 delivery representation candidate；BIN 当前项目范围明确排除。
+- 未确认边界：exact CLI spelling、actual encoding success、round-trip fidelity、DRC file bytes、decode cost `D(i,v)`、DRC-aware `Q_base(i,v)`、Pareto pruning、lookup projection 和 solver-side variant-aware contract 均未在本轮确认。当前 CLI help 确认 `-point_cloud`、`-cl` 与 `-qp` 可观察，未确认 `-qc` 是否被当前 executable 接受。
+- 对实现的影响：后续 DRC corpus 不应按 PLY-only distance lookup 预先删减，应先保留完整 pilot candidate family 进入受控 round-trip probe 与后续 corpus 生成。metadata 必须能追溯 source PLY、`source_pdl`、Draco profile 与 encoder provenance。
+- 对论文与实验表述的影响：可以表述为 data-prep 侧已冻结第一版 composite DRC candidate family；不能表述为已生成 DRC corpus、已验证 codec profile、已获得 `R(i,v)` / `D(i,v)` / `Q_base(i,v)` evidence 或已完成 solver-side lookup/pruning contract。
