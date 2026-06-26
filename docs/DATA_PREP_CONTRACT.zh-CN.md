@@ -1,12 +1,12 @@
 # Stage2 数据准备项目契约
 
-> 阶段 2B.1 更新：阶段 2B 已完成双代表 tile 的 Draco round-trip probe；验证契约已修正为 order-independent point-set validation，decoded point record order 不作为 DRC delivery representation 的稳定不变量。当前 active DRC variant dimension 为 `source_pdl × qp`，`qc` 不进入当前 variant identity。
+> 阶段 2C.1 更新：阶段 2C 已完成 frame 1051 的完整 DRC pilot corpus 生成与独立验证。当前 active DRC variant dimension 为 `source_pdl × qp`，`cl = 10` 固定，`qc` 不进入当前 variant identity。DRC byte size 是 measured encoded file size，但不自动等价于最终网络开销、正式 `r_bytes` 或 `D(i,v)`。
 
 ## 1. 项目目的与范围
 
 本仓库服务于 Work1 Stage2 的真实数据准备与资产元数据工作。Stage2 的目标是在 Stage1 给定 `Budget_total` 后，为每个空间 tile 选择离散质量档位；本仓库未来负责提供可追溯的 tile 级多质量候选资产、资产元数据和后续 pilot 所需证据。
 
-阶段 2B 已对两个代表性非空 tile 执行受控 PLY -> DRC -> PLY round-trip probe；阶段 2B.1 没有重新编码或解码，只基于既有 30 个 DRC 与 30 个 decoded PLY 完成 order-independent 独立验证。当前仍不执行全量 600 DRC corpus、decode-cost benchmark、XML 生成、正式 asset catalog 生成、Stage2Input 生成或批量帧资产生成。
+阶段 2C 已对 frame 1051 的 40 个非空 tile 生成完整 DRC pilot corpus：`40 tiles × 5 source_pdl × 3 qp = 600` 个 DRC delivery variants。当前仍不执行 decode-cost benchmark、XML 生成、正式 asset catalog 生成、Stage2Input 生成或批量帧资产生成。
 
 ## 2. 当前已确认的数据准备方向
 
@@ -28,7 +28,7 @@
 - 阶段 1D 的 multi-PDL pilot root 中，`PDL = 1.0` 必须逐字节复制阶段 1A baseline；低 PDL 资产是 calibration sampling rule 的 tile-local derived adaptation。
 - PDL 当前定位为 `source_pdl`，即 tile-local nested sampling 后的 source point-density axis；它不是最终 Stage2 delivery candidate 的唯一离散质量轴。
 - 后续 Stage2 delivery representation candidate 应记录为 composite representation variant，其逻辑 identity 至少包含 `dataset_id`、`frame_id`、`grid_profile_id`、`tile_id`、`source_pdl`、`codec_id = draco`、point-cloud mode、`cl` 与 `qp`。
-- 当前 active DRC raw candidate family 为：`source_pdl ∈ {0.2,0.4,0.6,0.8,1.0}`、`codec = Draco`、point-cloud mode required、`cl = 10`、`qp ∈ {8,10,12}`。当前 native `draco_encoder` CLI help 未暴露 `-qc`，因此 `qc` 不进入当前 variant identity、file name、generation command 或 metadata 作为已生效参数。该 family 已通过两个代表 tile 的 30-variant round-trip probe，但尚未完成全量 600-file corpus、target-side decode cost `D(i,v)`、DRC-aware `Q_base(i,v)` 或最优性验证。
+- 当前 active DRC raw candidate family 为：`source_pdl ∈ {0.2,0.4,0.6,0.8,1.0}`、`codec = Draco`、point-cloud mode required、`cl = 10`、`qp ∈ {8,10,12}`。当前 native `draco_encoder` CLI help 未暴露 `-qc`，因此 `qc` 不进入当前 variant identity、file name、generation command 或 metadata 作为已生效参数。该 family 已通过两个代表 tile 的 30-variant round-trip probe，并已完成 frame 1051 全部 40 个非空 tile 的 600-variant DRC pilot corpus 生成与独立验证；但尚未完成 target-side decode cost `D(i,v)`、DRC-aware `Q_base(i,v)` 或最优性验证。
 
 ### 当前方向但未冻结细节
 
@@ -67,6 +67,14 @@ binary PLY -> DRC
 ```
 
 binary PLY 是 source asset、Draco encoding input、round-trip validation reference，也可作为 uncompressed experimental baseline；但不默认作为正常 Stage2 delivery candidate。DRC 是后续实际 delivery representation candidate。BIN 当前项目范围明确排除，不进行 PLY/DRC 的 BIN 二次打包；旧项目与导师脚本中的 BIN 流程仅为 historical static reference。
+
+阶段 2C 的 frame 1051 DRC pilot corpus 已生成在 Git ignored artifact root：
+
+```text
+artifacts/pilot_1051_g128_drc_pdl5_qp3_cl10_v1/
+```
+
+该 corpus 覆盖 40 个非空 tile、5 个 source_pdl 与 3 个 qp，共 600 个 DRC variants。全部 DRC 均由对应 PDL binary PLY 派生；空 tile 不生成 DRC。manifest 记录 source PLY SHA-256、DRC SHA-256、DRC measured encoded file size、encoder / decoder SHA-256 与 variant identity。
 
 Draco decoded PLY 的 point record order 不作为当前 delivery representation 的稳定不变量。round-trip geometry 必须采用 order-independent bidirectional point-set validation：source 到 decoded、decoded 到 source 均需在由 source bbox span 与 `qp` 推导的量化 cell diagonal tolerance 内找到对应点。RGB validation 分为两层：其一，RGB triplet multiset 必须 exact preservation；其二，对高置信 mutual-nearest spatial correspondence 点对要求 RGB exact match。若存在量化碰撞或空间匹配歧义，必须记录 ambiguous / nonmutual 统计，不得在没有 point identity 的条件下过度表述为所有点的 color-to-geometry association 已被无条件证明。
 
@@ -162,11 +170,11 @@ data-prep 不预先把 PLY-only distance lookup 当作 DRC candidate hard filter
 
 当前阶段不做以下工作：
 
-- 不生成全量 DRC corpus、BIN、XML、player manifest、正式 asset catalog 或 Stage2Input。
+- 不生成 BIN、XML、player manifest、正式 asset catalog 或 Stage2Input。
 - 不生成其他 frame 或全序列资产。
 - 不运行导师脚本或旧播放器；不在阶段 2B.1 重新运行 Draco 编码/解码，不覆盖或重建既有 30-variant probe artifact。
 - 不把 frame 1051 pilot profile 写成官方世界坐标、物理米制网格、最优 grid 或最终全序列实验 grid。
-- 不冻结全量 corpus 的最终 Draco profile、target-side decode cost 或 DRC-aware quality evidence。
+- 不冻结 target-side decode cost、DRC-aware quality evidence、最终 solver candidate filtering 或最终 Stage2Input contract。
 - 不冻结 XML tag/schema。
 - 不修改 `pcv-stage2-allocation` 或 `pcv-distance-quality-calibration`。
 - 不整体复用导师脚本包，不直接运行旧脚本。

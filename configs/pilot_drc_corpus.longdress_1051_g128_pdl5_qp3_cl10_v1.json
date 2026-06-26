@@ -1,0 +1,51 @@
+{
+  "profile_id": "pilot_drc_corpus_longdress_1051_g128_pdl5_qp3_cl10_v1",
+  "profile_scope": "Frame 1051 pilot DRC corpus generation profile for existing five-level binary PLY source assets; not a multi-frame or final Stage2Input profile.",
+  "dataset_id": "8i_longdress",
+  "frame_id": 1051,
+  "grid_profile_id": "longdress_raw_g128_fullseq_pilot_v1",
+  "source_artifact_root": "artifacts/pilot_1051_g128_tilelocal_pdl5_v1",
+  "source_artifact_profile_id": "longdress_1051_g128_tilelocal_pdl5_v1",
+  "source_pdls": [
+    0.2,
+    0.4,
+    0.6,
+    0.8,
+    1.0
+  ],
+  "qp_values": [
+    8,
+    10,
+    12
+  ],
+  "codec_id": "draco",
+  "point_cloud_flag": "-point_cloud",
+  "compression_level": 10,
+  "encoder_command": "draco_encoder",
+  "decoder_command": "draco_decoder",
+  "expected_encoder_sha256": "EF2BDDC544E46CBA1396037998055A51517D867E9374AD26A4C69947C47AC4C6",
+  "expected_decoder_sha256": "CA931DFBBD7EA70311F6642147FF495EDD4682C120AF365F797CFACA2EFF3460",
+  "output_root": "artifacts/pilot_1051_g128_drc_pdl5_qp3_cl10_v1",
+  "color_validation": {
+    "rgb_multiset_exact_required": true,
+    "point_order_not_required": true,
+    "local_rgb_association": "canary_only"
+  },
+  "canary_selection": {
+    "min_nonempty_tile": true,
+    "max_nonempty_tile": true,
+    "source_pdl": 1.0,
+    "qp_values": [
+      8,
+      10,
+      12
+    ],
+    "tie_break": "canonical_tile_id_lexicographic"
+  },
+  "non_claims": [
+    "This profile does not define formal Stage2Input.",
+    "This profile does not define final D(i,v).",
+    "This profile does not define final Q_base(i,v).",
+    "This profile does not perform lookup filtering or Pareto pruning."
+  ]
+}
